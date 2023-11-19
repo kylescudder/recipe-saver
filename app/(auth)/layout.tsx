@@ -8,9 +8,9 @@ import { dark } from "@clerk/themes";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "PROJECT_NAME",
+  title: "Recipe Saver",
   description:
-    "PROJECT_DESCRIPTION",
+    "A site for saving recipes so we don't keep buying ingredients then not using them",
 };
 
 export default function RootLayout({

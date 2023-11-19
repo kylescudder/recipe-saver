@@ -23,7 +23,7 @@ export default function Topbar() {
           className="text-2xl leading-6 font-bold
 				text-light-1 max-xs:hidden"
         >
-          PRJOECT_NAME
+          Recipe Saver
         </p>
       </Link>
 
