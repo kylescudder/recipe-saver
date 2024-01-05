@@ -4,28 +4,28 @@ import mongoose from 'mongoose'
 export interface IRecipe {
 	_id: string
 	recipeName: string
-	link: string
-	book: string
-	pageNo: string
+	recipeLink: string
+	recipeBook: string
+	recipePageNo: string
 	archive: boolean
 }
 interface RecipeClass {
-  _id: mongoose.Types.ObjectId;
-  recipeName: string;
-  link: string;
-  book: string;
-  pageNo: string;
-  archive: boolean;
+	_id: mongoose.Types.ObjectId
+	recipeName: string
+	recipeLink: string
+	recipeBook: string
+	recipePageNo: string
+	archive: boolean
 }
 const recipeSchema = new mongoose.Schema<RecipeClass>({
-  _id: { type: mongoose.Schema.Types.ObjectId },
-  recipeName: { type: String },
-  link: { type: String },
-  book: { type: String },
-  pageNo: { type: String },
-  archive: { type: Boolean },
-});
+	_id: { type: mongoose.Schema.Types.ObjectId },
+	recipeName: { type: String },
+	recipeLink: { type: String },
+	recipeBook: { type: String },
+	recipePageNo: { type: String },
+	archive: { type: Boolean }
+})
 
-const Recipe = mongoose.models.Recipe || mongoose.model("Recipe", recipeSchema);
+const Recipe = mongoose.models.Recipe || mongoose.model('Recipe', recipeSchema)
 
-export default Recipe;
+export default Recipe
