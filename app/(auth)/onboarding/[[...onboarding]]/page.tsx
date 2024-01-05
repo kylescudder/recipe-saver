@@ -6,11 +6,13 @@ import Logout from '@/components/shared/Logout'
 import { type IUser } from '@/lib/models/user'
 import { getUserInfo } from '@/lib/actions/user.actions'
 
-export default async function page () {
+export default async function page (): Promise<JSX.Element | null> {
 	const user = await currentUser()
 	if (!user) return null
 
-	const userInfo: IUser = await getUserInfo(user.id)
+	const userInfo: IUser | null = await getUserInfo(user.id)
+	if (!userInfo) return null
+
 	if (userInfo?.onboarded) redirect('/')
 
 	const userData: IUser = {
@@ -28,7 +30,7 @@ export default async function page () {
 				<h1 className="head-text text-3xl leading-6 font-bold text-dark-1 dark:text-light-1">
           Onboarding
 				</h1>
-				<Logout placement="logout" />
+				<Logout />
 			</div>
 			<p className="mt-3 text-base leading-6 font-normal text-dark-2 dark:text-light-2">
         Complete your profile now to use the Date Pot
