@@ -92,7 +92,6 @@ const AccountProfile = ({ user, btnTitle }: Props): JSX.Element => {
 			<FileInput
 				label="Profile Picture"
 				radius="md"
-				placeholder="Show us your pretty face"
 				className="text-dark-2 dark:text-light-2"
 				size="md"
 				{...form.getInputProps('image')}
