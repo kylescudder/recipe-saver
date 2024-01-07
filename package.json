@@ -23,7 +23,7 @@
     "@sentry/nextjs": "^7.92.0",
     "@tabler/icons-react": "^2.41.0",
     "@types/node": "20.10.6",
-    "@types/react": "18.2.37",
+    "@types/react": "18.2.47",
     "@types/react-dom": "18.2.18",
     "@types/tabulator-tables": "^5.5.4",
     "autoprefixer": "10.4.16",
