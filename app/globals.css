@@ -239,3 +239,24 @@
 }
 
 /*END Dark mode slider*/
+
+.mantine-TextInput-label,
+.mantine-Textarea-label,
+.mantine-NumberInput-label,
+.mantine-RadioGroup-label,
+.mantine-Radio-label,
+.mantine-Modal-title {
+  @apply text-dark-1 dark:text-light-1
+}
+.mantine-Button-label {
+  @apply font-semibold
+}
+.mantine-TextInput-input,
+.mantine-Textarea-input,
+.mantine-NumbeprInput-input,
+.mantine-NumberInput-control {
+  @apply bg-light-2 text-dark-1 dark:bg-dark-2 dark:text-light-1
+}
+.tabler-icon {
+  color: white;
+}

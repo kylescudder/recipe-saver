@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react'
 import { Button, Input } from '@mantine/core'
-import { IconSearch } from '@tabler/icons-react'
+import { IconFilePlus, IconSearch } from '@tabler/icons-react'
 import { useRouter } from 'next/navigation'
 import type Tabulator from 'tabulator-tables'
 import {
@@ -11,11 +11,27 @@ import {
 import 'tabulator-tables/dist/css/tabulator_midnight.min.css'
 import { type IRecipe } from '@/lib/models/recipe'
 import { archiveRecipe } from '@/lib/actions/recipe.actions'
+import FullScreenModal from './FullScreenModal'
+import AddRecipe from './AddRecipe'
+
+const newRecipe = {
+	_id: '',
+	recipeName: '',
+	recipeLink: '',
+	recipeBook: '',
+	recipePageNo: '',
+	archive: false
+};
 
 export function List (props: { records: any[] }): JSX.Element {
 	const [searchValue, setSearchValue] = useState('')
 	const [filteredRecords, setFilteredRecords] = useState(props.records)
 	const [searchOpen, setSearchOpen] = React.useState(false)
+	const [open, setOpen] = React.useState(false);
+
+  const handleClickOpen = () => {
+    setOpen(true);
+  };
 
 	const handleSearchClickOpen = (): void => {
 		setSearchOpen(true)
@@ -57,7 +73,18 @@ export function List (props: { records: any[] }): JSX.Element {
 			columns: [
 				{
 					title: 'Recipe',
-					field: 'recipePageNo',
+					field: 'recipeName',
+					formatter: 'textarea',
+					responsive: 0,
+					minWidth: 150,
+					cellClick: function (e, cell) {
+						router.push(`/recipe/${cell.getRow().getData()._id}`)
+					}
+				},
+				{
+					title: 'Link or book',
+					responsive: 1,
+					minWidth: 150,
 					formatter: function (cell, formatterParams, onRendered) {
 						const pageNo = cell.getValue()
 						const link = cell.getRow().getData().recipeLink
@@ -71,24 +98,9 @@ export function List (props: { records: any[] }): JSX.Element {
 					},
 					cellClick: function (e, cell) {
 						const link: string = cell.getRow().getData().recipeLink
-						if (link) {
+						if (link.includes('http')) {
 							router.push(link)
 						}
-					}
-				},
-				{
-					title: '',
-					field: 'archive',
-					width: 80,
-					formatter: function (cell, formatterParams, onRendered) {
-						// Return a string of HTML for the button
-						return `<button class="mantine-UnstyledButton-root mantine-Button-root 
-						bg-red-500 mantine-goncdh"><img alt="archive" src="assets/archive.svg"/></button>`
-					},
-					cellClick: async function (e, cell) {
-						// Handle the click event here
-						const recipe: IRecipe = cell.getRow().getData()
-						await handleArchiveClick(recipe._id)
 					}
 				}
 			],
@@ -101,6 +113,10 @@ export function List (props: { records: any[] }): JSX.Element {
 			tabulatorOptions
 		)
 	}, [filteredRecords])
+
+	const pullOpenState = (open: boolean) => {
+    setOpen(open);
+  };
 
 	return (
 		<div>
@@ -130,7 +146,21 @@ export function List (props: { records: any[] }): JSX.Element {
 				>
 					<IconSearch width={24} height={24} strokeLinejoin="miter" />
 				</Button>
+				<Button
+          radius="md"
+          className="bg-primary-500 hover:bg-primary-hover text-light-1 absolute left-6"
+          onClick={handleClickOpen}
+        >
+          <IconFilePlus width={24} height={24} strokeLinejoin="miter" />
+        </Button>
 			</div>
+			<FullScreenModal
+        open={open}
+        func={pullOpenState}
+				// form={props.addRecordComp}
+				form={<AddRecipe recipe={newRecipe} />}
+        title={`Add recipe`}
+      />
 			<div id="tabulator-placeholder"></div>
 		</div>
 	)
