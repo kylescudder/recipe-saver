@@ -9,7 +9,7 @@ import { IconTrash } from "@tabler/icons-react";
 import { archiveRecipe, updateRecipe } from "@/lib/actions/recipe.actions";
 
 export default function AddRecipe(props: {
-  recipe: IRecipe;
+  recipe: IRecipe
 }) {
 	const router = useRouter();
 	const pathname = usePathname();
