@@ -30,7 +30,7 @@
     "class-variance-authority": "^0.7.0",
     "eslint-config-next": "14.0.4",
     "infisical-node": "^1.5.1",
-    "mongoose": "^8.0.4",
+    "mongoose": "^8.1.0",
     "next": "14.0.4",
     "react": "18.2.0",
     "react-dom": "18.2.0",
