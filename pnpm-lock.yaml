@@ -54,8 +54,8 @@ dependencies:
     specifier: 18.2.18
     version: 18.2.18
   '@types/tabulator-tables':
-    specifier: ^5.5.4
-    version: 5.5.4
+    specifier: ^5.5.6
+    version: 5.5.6
   autoprefixer:
     specifier: 10.4.17
     version: 10.4.17(postcss@8.4.33)
@@ -1359,8 +1359,8 @@ packages:
       '@types/node': 20.11.5
     dev: false
 
-  /@types/tabulator-tables@5.5.4:
-    resolution: {integrity: sha512-gAeMwFaWLu3WgtC7YSqXfIuNjZGu7BzDQafsAf3DYeCsyGFe5g6DDvClc3ZrT/Etw9PPmDI0CG+7KwwqBkPDHQ==}
+  /@types/tabulator-tables@5.5.6:
+    resolution: {integrity: sha512-e26S+UpdaTXnzSwX8yT9NaQTYLFK9Uh0I3SYKjqkAWCSrN9r0TpGh3+7xuN3LyuGRFv5lnltWZb6a9jdsRS+gQ==}
     dev: false
 
   /@types/webidl-conversions@7.0.0:
