@@ -20,7 +20,7 @@
     "@mantine/next": "^6.0.21",
     "@radix-ui/react-label": "^2.0.2",
     "@radix-ui/react-slot": "^1.0.2",
-    "@sentry/nextjs": "^7.93.0",
+    "@sentry/nextjs": "^7.98.0",
     "@tabler/icons-react": "^2.46.0",
     "@types/node": "20.11.5",
     "@types/react": "18.2.48",
