@@ -9,7 +9,7 @@
     "lint": "eslint --fix . --ext .ts,.tsx"
   },
   "dependencies": {
-    "@clerk/nextjs": "^4.29.5",
+    "@clerk/nextjs": "^4.29.7",
     "@clerk/themes": "^1.7.9",
     "@hookform/resolvers": "^3.3.4",
     "@mantine/core": "^6.0.20",
