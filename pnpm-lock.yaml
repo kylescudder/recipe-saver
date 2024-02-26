@@ -63,8 +63,8 @@ dependencies:
     specifier: 18.2.18
     version: 18.2.18
   '@types/tabulator-tables':
-    specifier: ^5.5.7
-    version: 5.5.7
+    specifier: ^5.5.10
+    version: 5.5.10
   autoprefixer:
     specifier: 10.4.17
     version: 10.4.17(postcss@8.4.33)
@@ -90,8 +90,8 @@ dependencies:
     specifier: ^10.0.4
     version: 10.0.4(react-dom@18.2.0)(react@18.2.0)
   tabulator-tables:
-    specifier: ^5.5.4
-    version: 5.5.4
+    specifier: ^5.6.1
+    version: 5.6.1
   tailwind-merge:
     specifier: ^2.2.1
     version: 2.2.1
@@ -1656,8 +1656,8 @@ packages:
       '@types/node': 20.11.16
     dev: false
 
-  /@types/tabulator-tables@5.5.7:
-    resolution: {integrity: sha512-2G6i6QhJ/L+8Xk3KAfFZ91qADS9MEu6ve1uT59iaA7fpA6h6AswbFP/5dl3yg8lUhMsP4Zcst073FhbK7Y0TJA==}
+  /@types/tabulator-tables@5.5.10:
+    resolution: {integrity: sha512-IMoLlEroSJn0HdfL6EIAWatyul6XW8dzRsUJZ2z2dDh3P9JVSvpDsPILLV1Fw6PxpeoU9WGwo+qxUOK7k5aKQw==}
     dev: false
 
   /@types/trusted-types@2.0.7:
@@ -5047,8 +5047,8 @@ packages:
     resolution: {integrity: sha512-Cat63mxsVJlzYvN51JmVXIgNoUokrIaT2zLclCXjRd8boZ0004U4KCs/sToJ75C6sdlByWxpYnb5Boif1VSFew==}
     dev: false
 
-  /tabulator-tables@5.5.4:
-    resolution: {integrity: sha512-hVcITAfO2G3gm2ILW9GN2ORgcmNsbVmC+Q+2E3xfthIE9xtFxGKSbhbsNk39h11Uzm9GNUvjGfos1IVKrfeeOA==}
+  /tabulator-tables@5.6.1:
+    resolution: {integrity: sha512-DsmaZqEmlQS/NL5ZJbVtoaeYjJgofEFp+2er7+uwKerGwd/E2rZbeQgux4+Ab1dxNJcbptiX7oUiTwogOnUdgQ==}
     dev: false
 
   /tailwind-merge@2.2.1:
