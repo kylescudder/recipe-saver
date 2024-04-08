@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@clerk/nextjs": "^4.29.9",
-    "@clerk/themes": "^1.7.10",
+    "@clerk/themes": "^1.7.11",
     "@hookform/resolvers": "^3.3.4",
     "@mantine/core": "^6.0.20",
     "@mantine/dates": "^6.0.20",
