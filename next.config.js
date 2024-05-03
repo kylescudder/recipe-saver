@@ -1,33 +1,33 @@
-const withSerwist = require("@serwist/next").default({
-  swSrc: "app/sw.ts",
-  swDest: "public/sw.js",
-});
+const withSerwist = require('@serwist/next').default({
+  swSrc: 'app/sw.ts',
+  swDest: 'public/sw.js'
+})
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   experimental: {
-    serverComponentsExternalPackages: ["mongoose"],
+    serverComponentsExternalPackages: ['mongoose']
   },
   eslint: {
     // Warning: This allows production builds to successfully complete even if
     // your project has ESLint errors.
-    ignoreDuringBuilds: true,
+    ignoreDuringBuilds: true
   },
   images: {
     remotePatterns: [
       {
-        protocol: "https",
-        hostname: "img.clerk.com",
+        protocol: 'https',
+        hostname: 'img.clerk.com'
       },
       {
-        protocol: "https",
-        hostname: "images.clerk.dev",
+        protocol: 'https',
+        hostname: 'images.clerk.dev'
       },
       {
-        protocol: "https",
-        hostname: "placehold.co",
-      },
-    ],
-  },
-};
+        protocol: 'https',
+        hostname: 'placehold.co'
+      }
+    ]
+  }
+}
 
-module.exports = withSerwist(nextConfig);
+module.exports = withSerwist(nextConfig)

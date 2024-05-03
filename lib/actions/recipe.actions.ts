@@ -4,22 +4,22 @@ import { connectToDB } from '../mongoose'
 import Recipe, { type IRecipe } from '../models/recipe'
 import mongoose from 'mongoose'
 
-export async function getRecipes (): Promise<IRecipe[]> {
-	try {
-		await connectToDB()
+export async function getRecipes(): Promise<IRecipe[]> {
+  try {
+    await connectToDB()
 
-		return await Recipe.find({})
-	} catch (error: any) {
-		throw new Error(`Failed to get recipes: ${error.message}`)
-	}
+    return await Recipe.find({})
+  } catch (error: any) {
+    throw new Error(`Failed to get recipes: ${error.message}`)
+  }
 }
 export async function updateRecipe(recipeData: IRecipe) {
   try {
-    connectToDB();
+    connectToDB()
 
-    const newId = new mongoose.Types.ObjectId();
-    if (recipeData._id === "") {
-      recipeData._id = newId.toString();
+    const newId = new mongoose.Types.ObjectId()
+    if (recipeData._id === '') {
+      recipeData._id = newId.toString()
     }
 
     return await Recipe.findOneAndUpdate(
@@ -30,25 +30,25 @@ export async function updateRecipe(recipeData: IRecipe) {
         recipeLink: recipeData.recipeLink,
         recipeBook: recipeData.recipeBook,
         recipePageNo: recipeData.recipePageNo,
-        archive: recipeData.archive,
+        archive: recipeData.archive
       },
       { upsert: true, new: true }
-    );
+    )
   } catch (error: any) {
-    throw new Error(`Failed to create/update recipe: ${error.message}`);
+    throw new Error(`Failed to create/update recipe: ${error.message}`)
   }
 }
 export async function archiveRecipe(id: string) {
   try {
-    connectToDB();
+    connectToDB()
 
     return await Recipe.findOneAndUpdate(
       { _id: new mongoose.Types.ObjectId(id) },
       {
-        archive: true,
+        archive: true
       }
-    );
+    )
   } catch (error: any) {
-    throw new Error(`Failed to archive recipe: ${error.message}`);
+    throw new Error(`Failed to archive recipe: ${error.message}`)
   }
 }
