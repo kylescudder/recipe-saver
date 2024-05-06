@@ -9,8 +9,8 @@ dependencies:
     specifier: ^4.29.9
     version: 4.29.9(next@14.2.3)(react-dom@18.2.0)(react@18.2.0)
   '@clerk/themes':
-    specifier: ^1.7.12
-    version: 1.7.12(react@18.2.0)
+    specifier: ^2.1.2
+    version: 2.1.2
   '@hookform/resolvers':
     specifier: ^3.3.4
     version: 3.3.4(react-hook-form@7.45.4)
@@ -306,14 +306,11 @@ packages:
       swr: 2.2.0(react@18.2.0)
     dev: false
 
-  /@clerk/themes@1.7.12(react@18.2.0):
-    resolution: {integrity: sha512-puO5i91Da7IeTEw1qowce3K+6mOHnFSZ1UhSQsF9pYFUhp+j3WciwahxC4QnF6FL14jaS4XLZI/RUs66TuY+Hw==}
-    engines: {node: '>=14'}
-    peerDependencies:
-      react: '>=16'
+  /@clerk/themes@2.1.2:
+    resolution: {integrity: sha512-amSxjWJGYDOKFQDa+QCSmfyjIzdPo2e5L0PA/GbP40DeBA4x0RAdXQiY8OAtglvLPw21aOWNMqSYWJXIF0SYVQ==}
+    engines: {node: '>=18.17.0'}
     dependencies:
-      '@clerk/types': 3.63.1
-      react: 18.2.0
+      '@clerk/types': 4.2.0
       tslib: 2.4.1
     dev: false
 
@@ -324,9 +321,9 @@ packages:
       csstype: 3.1.1
     dev: false
 
-  /@clerk/types@3.63.1:
-    resolution: {integrity: sha512-PeZrRzWApJl1BYsT/wQPtEzhDmwfqeMKWuSRcHe3Kh0Itc5Gp7w9HrrKkyMnRuzebVj4z5gX4rwJOmTD/P1DhQ==}
-    engines: {node: '>=14'}
+  /@clerk/types@4.2.0:
+    resolution: {integrity: sha512-JtQINgvRGkO9K8os8pSj3QvNrBDvdc0lFpbTwpF3J1CBLafiJmJiBUyUSzWcI/k/9FlClMZxauZufVp9jlSBjg==}
+    engines: {node: '>=18.17.0'}
     dependencies:
       csstype: 3.1.1
     dev: false
