@@ -3,7 +3,7 @@
 import React from 'react'
 import { getRecipes } from '@/lib/actions/recipe.actions'
 import { getUserInfo } from '@/lib/actions/user.actions'
-import { currentUser } from '@clerk/nextjs'
+import { currentUser } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
 import { List } from '@/components/shared/List'
 
