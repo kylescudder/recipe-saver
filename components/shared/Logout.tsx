@@ -9,9 +9,7 @@ export default function Logout(): JSX.Element {
   const router = useRouter()
   return (
     <SignedIn>
-      <SignOutButton
-        signOutOptions={{redirectUrl: 'sign-in'}}
-      >
+      <SignOutButton signOutOptions={{ redirectUrl: 'sign-in' }}>
         <div className='flex items-center cursor-pointer'>
           <IconLogout
             size={24}
