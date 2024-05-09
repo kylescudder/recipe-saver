@@ -1,12 +1,12 @@
-import { authMiddleware } from '@clerk/nextjs/server'
-export default authMiddleware({
-  // An array of public routes that don't require authentication.
-  publicRoutes: ['/api/webhook/clerk'],
+import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
 
-  // An array of routes to be ignored by the authentication middleware.
-  ignoredRoutes: ['/api/webhook/clerk']
+const isGuestsRoute = createRouteMatcher(['/guests(.*)'])
+
+export default clerkMiddleware((auth, req) => {
+  // Restrict admin route to users with specific role
+  if (isGuestsRoute(req)) auth().protect()
 })
 
 export const config = {
-  matcher: ['/((?!.+\\.[\\w]+$|_next).*)', '/', '/(api|trpc)(.*)']
+  matcher: ['/((?!.*\\..*|_next).*)', '/', '/(api|trpc)(.*)']
 }
