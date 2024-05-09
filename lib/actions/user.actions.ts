@@ -1,7 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { clerkClient } from '@clerk/nextjs'
+import { clerkClient } from '@clerk/nextjs/server'
 import User, { type IUser } from '../models/user'
 import { connectToDB } from '../mongoose'
 import { convertBase64ToFile } from '../utils'

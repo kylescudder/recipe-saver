@@ -10,11 +10,9 @@ export default function Logout(): JSX.Element {
   return (
     <SignedIn>
       <SignOutButton
-        signOutCallback={() => {
-          router.push('/sign-in')
-        }}
+        signOutOptions={{redirectUrl: 'sign-in'}}
       >
-        <div className='flex items-center'>
+        <div className='flex items-center cursor-pointer'>
           <IconLogout
             size={24}
             className='text-light-1'
