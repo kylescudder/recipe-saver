@@ -119,7 +119,7 @@ const AccountProfile = ({ user, btnTitle }: Props): JSX.Element => {
         label='Bio'
         radius='md'
         placeholder='Tell me a little bit about yourself...'
-        className='text-lg leading-6 font-semibold text-dark-2 dark:text-light-2'
+        className='text-lg font-semibold leading-6 text-dark-2 dark:text-light-2'
         size='md'
         minRows={8}
         {...form.getInputProps('bio')}

@@ -119,7 +119,7 @@ export function List(props: { records: any[] }): JSX.Element {
 
   return (
     <div>
-      <div className='flex mb-4'>
+      <div className='mb-4 flex'>
         <div
           className={`relative ${
             searchOpen ? 'w-full' : 'w-0 overflow-hidden'
@@ -133,7 +133,7 @@ export function List(props: { records: any[] }): JSX.Element {
               setSearchValue(e.target.value)
             }}
             className={`${searchOpen ? 'w-full' : 'w-0'} pl-2
-            dark:text-light-2 text-dark-2`}
+            text-dark-2 dark:text-light-2`}
             radius='md'
             size='sm'
           />
@@ -142,14 +142,14 @@ export function List(props: { records: any[] }): JSX.Element {
           radius='md'
           className={`${
             searchOpen ? 'hidden' : 'absolute right-6'
-          } bg-primary-500 hover:bg-primary-hover text-light-1`}
+          } hover:bg-primary-hover bg-primary-500 text-light-1`}
           onClick={handleSearchClickOpen}
         >
           <IconSearch width={24} height={24} strokeLinejoin='miter' />
         </Button>
         <Button
           radius='md'
-          className='bg-primary-500 hover:bg-primary-hover text-light-1 absolute left-6'
+          className='hover:bg-primary-hover absolute left-6 bg-primary-500 text-light-1'
           onClick={handleClickOpen}
         >
           <IconFilePlus width={24} height={24} strokeLinejoin='miter' />

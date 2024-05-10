@@ -27,7 +27,7 @@ export default function BackButton(props: {
   return (
     <Button
       radius='md'
-      className={`bg-primary-500 hover:bg-primary-hover ${
+      className={`hover:bg-primary-hover bg-primary-500 ${
         props.record._id === '' ? 'hidden' : ''
       }`}
       onClick={handleBack}

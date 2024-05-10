@@ -21,7 +21,7 @@ export default function Topbar(): JSX.Element {
           width={28}
         />
         <p
-          className='text-2xl leading-6 font-bold
+          className='text-2xl font-bold leading-6
 				text-light-1 max-xs:hidden'
         >
           Recipe Saver

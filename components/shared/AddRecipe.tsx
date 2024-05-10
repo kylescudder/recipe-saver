@@ -69,7 +69,7 @@ export default function AddRecipe(props: { recipe: IRecipe }) {
 
   return (
     <div>
-      <div className='flex justify-between items-center'>
+      <div className='flex items-center justify-between'>
         <BackButton
           record={props.recipe}
           changesMade={changesMade}
@@ -118,7 +118,7 @@ export default function AddRecipe(props: { recipe: IRecipe }) {
           label='Link'
           radius='md'
           placeholder='Mob or bosh?'
-          className='text-dark-2 dark:text-light-2 hidden'
+          className='hidden text-dark-2 dark:text-light-2'
           size='md'
           {...form.getInputProps('recipeLink')}
         />
@@ -126,7 +126,7 @@ export default function AddRecipe(props: { recipe: IRecipe }) {
           label='Book'
           radius='md'
           placeholder='Which Joe Wicks book?'
-          className='text-dark-2 dark:text-light-2 hidden'
+          className='hidden text-dark-2 dark:text-light-2'
           size='md'
           {...form.getInputProps('recipeBook')}
         />
@@ -134,7 +134,7 @@ export default function AddRecipe(props: { recipe: IRecipe }) {
           label='PageNo'
           radius='md'
           placeholder='207? 145? 56?'
-          className='text-dark-2 dark:text-light-2 hidden'
+          className='hidden text-dark-2 dark:text-light-2'
           size='md'
           {...form.getInputProps('recipePageNo')}
         />

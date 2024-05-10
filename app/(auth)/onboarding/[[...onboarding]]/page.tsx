@@ -29,12 +29,12 @@ export default async function page(): Promise<JSX.Element | null> {
   return (
     <main className='mx-auto flex max-w-3xl flex-col justify-start px-10 py-20'>
       <div className='flex justify-between'>
-        <h1 className='head-text text-3xl leading-6 font-bold text-dark-1 dark:text-light-1'>
+        <h1 className='head-text text-3xl font-bold leading-6 text-dark-1 dark:text-light-1'>
           Onboarding
         </h1>
         <Logout />
       </div>
-      <p className='mt-3 text-base leading-6 font-normal text-dark-2 dark:text-light-2'>
+      <p className='mt-3 text-base font-normal leading-6 text-dark-2 dark:text-light-2'>
         Complete your profile now to use the Date Pot
       </p>
       <section className='mt-9 bg-dark-2 p-10'>
