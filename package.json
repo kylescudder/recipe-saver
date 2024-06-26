@@ -26,7 +26,7 @@
     "@sentry/nextjs": "7.114.0",
     "@serwist/next": "9.0.2",
     "@tabler/icons-react": "3.4.0",
-    "@types/node": "20.12.11",
+    "@types/node": "20.14.9",
     "@types/react": "18.3.2",
     "@types/react-dom": "18.3.0",
     "@types/tabulator-tables": "6.2.0",
