@@ -23,7 +23,7 @@
     "@mantine/next": "6.0.21",
     "@radix-ui/react-label": "2.0.2",
     "@radix-ui/react-slot": "1.0.2",
-    "@sentry/nextjs": "7.114.0",
+    "@sentry/nextjs": "8.13.0",
     "@serwist/next": "9.0.2",
     "@tabler/icons-react": "3.4.0",
     "@types/node": "20.12.11",
