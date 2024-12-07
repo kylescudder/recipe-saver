@@ -52,7 +52,7 @@
     "eslint-plugin-n": "17.7.0",
     "eslint-plugin-promise": "6.1.1",
     "eslint-plugin-react": "7.37.2",
-    "husky": "9.0.11",
+    "husky": "9.1.7",
     "postcss": "8.4.38",
     "postcss-preset-mantine": "1.15.0",
     "postcss-simple-vars": "7.0.1",
