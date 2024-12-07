@@ -17,7 +17,7 @@
     "@hookform/resolvers": "3.9.1",
     "@mantine/core": "6.0.20",
     "@mantine/dates": "6.0.20",
-    "@mantine/form": "7.9.2",
+    "@mantine/form": "7.14.3",
     "@mantine/hooks": "6.0.20",
     "@mantine/modals": "6.0.20",
     "@mantine/next": "6.0.21",
