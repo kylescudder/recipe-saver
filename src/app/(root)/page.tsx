@@ -7,7 +7,7 @@ import { currentUser } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
 import { List } from '@/components/shared/List'
 
-async function Page(): Promise<JSX.Element> {
+async function Page() {
   const user = await currentUser()
   if (!user) return <></>
 

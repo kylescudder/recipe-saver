@@ -6,7 +6,7 @@ import Logout from '@/components/shared/Logout'
 import { type IUser } from '@/lib/models/user'
 import { getUserInfo } from '@/lib/actions/user.actions'
 
-export default async function page(): Promise<JSX.Element | null> {
+export default async function page(): {
   const user = await currentUser()
   if (!user) return null
 
@@ -21,7 +21,7 @@ export default async function page(): Promise<JSX.Element | null> {
     username: userInfo
       ? userInfo?.username
       : user.emailAddresses[0].emailAddress,
-    name: userInfo?.name ? userInfo?.name : user.firstName ?? '',
+    name: userInfo?.name ? userInfo?.name : (user.firstName ?? ''),
     bio: userInfo?.bio ? userInfo?.bio : '',
     image: userInfo ? userInfo.image : user?.imageUrl,
     onboarded: userInfo ? userInfo?.onboarded : false

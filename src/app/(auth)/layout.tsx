@@ -1,5 +1,5 @@
 // app/layout.tsx
-import '../globals.css'
+import '@/styles/globals.css'
 import React from 'react'
 import { Inter } from 'next/font/google'
 import { ClerkProvider } from '@clerk/nextjs'
@@ -18,7 +18,7 @@ export default function RootLayout({
   children
 }: {
   children: React.ReactNode
-}): JSX.Element {
+}): {
   return (
     <ClerkProvider
       appearance={{
@@ -27,8 +27,7 @@ export default function RootLayout({
     >
       <html lang='en'>
         <body
-          className={`${inter.className} flex min-h-screen flex-1 flex-col items-center bg-dark-1 px-6 pb-10
-					pt-28 max-md:pb-32 sm:px-10`}
+          className={`${inter.className} flex min-h-screen flex-1 flex-col items-center bg-dark-1 px-6 pb-10 pt-28 max-md:pb-32 sm:px-10`}
         >
           {children}
         </body>

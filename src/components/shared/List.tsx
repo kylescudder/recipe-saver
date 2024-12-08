@@ -21,7 +21,7 @@ const newRecipe = {
   archive: false
 }
 
-export function List(props: { records: any[] }): JSX.Element {
+export function List(props: { records: any[] }): {
   const [searchValue, setSearchValue] = useState('')
   const [filteredRecords, setFilteredRecords] = useState(props.records)
   const [searchOpen, setSearchOpen] = React.useState(false)
@@ -132,8 +132,7 @@ export function List(props: { records: any[] }): JSX.Element {
             onChange={(e) => {
               setSearchValue(e.target.value)
             }}
-            className={`${searchOpen ? 'w-full' : 'w-0'} pl-2
-            text-dark-2 dark:text-light-2`}
+            className={`${searchOpen ? 'w-full' : 'w-0'} pl-2 text-dark-2 dark:text-light-2`}
             radius='md'
             size='sm'
           />

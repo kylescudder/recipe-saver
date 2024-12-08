@@ -12,7 +12,7 @@ interface Props {
   user: IUser
   btnTitle: string
 }
-const AccountProfile = ({ user, btnTitle }: Props): JSX.Element => {
+const AccountProfile = ({ user, btnTitle }: Props): => {
   const router = useRouter()
   const pathname = usePathname()
   const form = useForm({

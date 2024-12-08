@@ -5,7 +5,7 @@ import { SignOutButton, SignedIn } from '@clerk/nextjs'
 import { IconLogout } from '@tabler/icons-react'
 import { useRouter } from 'next/navigation'
 
-export default function Logout(): JSX.Element {
+export default function Logout(): {
   const router = useRouter()
   return (
     <SignedIn>
