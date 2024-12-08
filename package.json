@@ -19,7 +19,7 @@
     "@mantine/dates": "7.14.3",
     "@mantine/form": "7.14.3",
     "@mantine/hooks": "7.14.3",
-    "@mantine/modals": "6.0.20",
+    "@mantine/modals": "7.14.3",
     "@mantine/next": "6.0.22",
     "@radix-ui/react-label": "2.1.0",
     "@radix-ui/react-slot": "1.1.0",
