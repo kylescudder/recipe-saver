@@ -21,7 +21,7 @@ const newRecipe = {
   archive: false
 }
 
-export function List(props: { records: any[] }): {
+export function List(props: { records: any[] }) {
   const [searchValue, setSearchValue] = useState('')
   const [filteredRecords, setFilteredRecords] = useState(props.records)
   const [searchOpen, setSearchOpen] = React.useState(false)
@@ -132,7 +132,7 @@ export function List(props: { records: any[] }): {
             onChange={(e) => {
               setSearchValue(e.target.value)
             }}
-            className={`${searchOpen ? 'w-full' : 'w-0'} pl-2 text-dark-2 dark:text-light-2`}
+            className={`${searchOpen ? 'w-full' : 'w-0'} text-dark-2 dark:text-light-2 pl-2`}
             radius='md'
             size='sm'
           />
@@ -148,7 +148,7 @@ export function List(props: { records: any[] }): {
         </Button>
         <Button
           radius='md'
-          className='hover:bg-primary-hover absolute left-6 bg-primary-500 text-light-1'
+          className='hover:bg-primary-hover bg-primary-500 text-light-1 absolute left-6'
           onClick={handleClickOpen}
         >
           <IconFilePlus width={24} height={24} strokeLinejoin='miter' />

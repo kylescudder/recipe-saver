@@ -12,7 +12,7 @@ interface Props {
   user: IUser
   btnTitle: string
 }
-const AccountProfile = ({ user, btnTitle }: Props): => {
+const AccountProfile = ({ user, btnTitle }: Props) => {
   const router = useRouter()
   const pathname = usePathname()
   const form = useForm({
@@ -119,7 +119,7 @@ const AccountProfile = ({ user, btnTitle }: Props): => {
         label='Bio'
         radius='md'
         placeholder='Tell me a little bit about yourself...'
-        className='text-lg font-semibold leading-6 text-dark-2 dark:text-light-2'
+        className='text-dark-2 dark:text-light-2 text-lg font-semibold leading-6'
         size='md'
         minRows={8}
         {...form.getInputProps('bio')}

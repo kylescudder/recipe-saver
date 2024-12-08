@@ -5,7 +5,7 @@ import { SignOutButton, SignedIn } from '@clerk/nextjs'
 import { IconLogout } from '@tabler/icons-react'
 import { useRouter } from 'next/navigation'
 
-export default function Logout(): {
+export default function Logout() {
   const router = useRouter()
   return (
     <SignedIn>
@@ -17,7 +17,7 @@ export default function Logout(): {
             stroke={1}
             strokeLinejoin='miter'
           />
-          <p className='ml-2 text-light-2 max-lg:hidden'>Logout</p>
+          <p className='text-light-2 ml-2 max-lg:hidden'>Logout</p>
         </div>
       </SignOutButton>
     </SignedIn>

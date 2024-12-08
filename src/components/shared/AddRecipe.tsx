@@ -118,7 +118,7 @@ export default function AddRecipe(props: { recipe: IRecipe }) {
           label='Link'
           radius='md'
           placeholder='Mob or bosh?'
-          className='hidden text-dark-2 dark:text-light-2'
+          className='text-dark-2 dark:text-light-2 hidden'
           size='md'
           {...form.getInputProps('recipeLink')}
         />
@@ -126,7 +126,7 @@ export default function AddRecipe(props: { recipe: IRecipe }) {
           label='Book'
           radius='md'
           placeholder='Which Joe Wicks book?'
-          className='hidden text-dark-2 dark:text-light-2'
+          className='text-dark-2 dark:text-light-2 hidden'
           size='md'
           {...form.getInputProps('recipeBook')}
         />
@@ -134,7 +134,7 @@ export default function AddRecipe(props: { recipe: IRecipe }) {
           label='PageNo'
           radius='md'
           placeholder='207? 145? 56?'
-          className='hidden text-dark-2 dark:text-light-2'
+          className='text-dark-2 dark:text-light-2 hidden'
           size='md'
           {...form.getInputProps('recipePageNo')}
         />
