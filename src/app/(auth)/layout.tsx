@@ -3,7 +3,7 @@ import '@/styles/globals.css'
 import React from 'react'
 import { Inter } from 'next/font/google'
 import { ClerkProvider } from '@clerk/nextjs'
-import { type Metadata } from 'next'
+import { Viewport, type Metadata } from 'next'
 import { dark } from '@clerk/themes'
 
 const inter = Inter({ subsets: ['latin'] })
