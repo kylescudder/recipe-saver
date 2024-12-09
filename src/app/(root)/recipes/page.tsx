@@ -1,7 +1,6 @@
 'use client'
 
 import AddRecipe from './AddRecipe'
-import List from '@/components/shared/List'
 import { Button } from '@/components/ui/button'
 import { DataTableColumnHeader } from '@/components/ui/data-table-header'
 import {
