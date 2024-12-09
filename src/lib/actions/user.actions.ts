@@ -1,10 +1,8 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { clerkClient } from '@clerk/nextjs/server'
 import User, { type IUser } from '../models/user'
 import { connectToDB } from '../mongoose'
-import { convertBase64ToFile } from '../utils'
 
 export async function getUserInfo(id: string): Promise<IUser | null> {
   try {
@@ -33,14 +31,6 @@ export async function updateUser(userData: IUser, path: string): Promise<void> {
       },
       { upsert: true, new: true }
     )
-    if (!userData.image.includes('https://img.clerk.com')) {
-      const file: File = convertBase64ToFile(userData.image)
-      clerkClient.users
-        .updateUserProfileImage(userData.clerkId, { file })
-        .catch((err) => {
-          console.table(err.errors)
-        })
-    }
 
     if (path === '/profile/edit') {
       revalidatePath(path)
