@@ -1,10 +1,27 @@
-import { Modal } from '@mantine/core'
-import { IconCross } from '@tabler/icons-react'
 import React, { useEffect, useState } from 'react'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger
+} from '@/components/ui/dialog'
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger
+} from '@/components/ui/drawer'
+import { Button } from '@/components/ui/button'
+import { useMediaQuery } from '@/hooks/use-media-query'
 
 export default function FullScreenModal(props: {
   open: boolean
   func: (open: boolean) => void
+  button: React.ReactElement
   form: React.ReactElement
   title: string
 }) {
@@ -14,32 +31,36 @@ export default function FullScreenModal(props: {
   }
 
   const [open, setOpen] = useState<boolean>(props.open)
+  const isDesktop = useMediaQuery('(min-width: 768px)')
 
-  useEffect(() => {
-    setOpen(props.open)
-  }, [props.open])
+  if (isDesktop) {
+    return (
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogTrigger asChild>{props.button}</DialogTrigger>
+        <DialogContent className='sm:max-w-[425px]'>
+          <DialogHeader>
+            <DialogTitle>{props.title}</DialogTitle>
+          </DialogHeader>
+          {props.form}
+        </DialogContent>
+      </Dialog>
+    )
+  }
+
   return (
-    <Modal.Root
-      opened={open}
-      onClose={handleClose}
-      fullScreen
-      transitionProps={{ transition: 'slide-up', duration: 200 }}
-    >
-      <Modal.Content className='bg-light-1 dark:bg-dark-1'>
-        <Modal.Header className='bg-light-1 dark:bg-dark-1'>
-          <IconCross
-            onClick={handleClose}
-            aria-label='close'
-            width={24}
-            height={24}
-            strokeLinejoin='miter'
-          />
-          <Modal.Title className='text-dark-1 dark:text-light-1'>
-            {props.title}
-          </Modal.Title>
-        </Modal.Header>
-        <Modal.Body>{props.form}</Modal.Body>
-      </Modal.Content>
-    </Modal.Root>
+    <Drawer open={open} onOpenChange={setOpen}>
+      <DrawerTrigger asChild>{props.button}</DrawerTrigger>
+      <DrawerContent>
+        <DrawerHeader className='text-left'>
+          <DrawerTitle>{props.title}</DrawerTitle>
+        </DrawerHeader>
+        {props.form}
+        <DrawerFooter className='pt-2'>
+          <DrawerClose asChild>
+            <Button variant='outline'>Cancel</Button>
+          </DrawerClose>
+        </DrawerFooter>
+      </DrawerContent>
+    </Drawer>
   )
 }

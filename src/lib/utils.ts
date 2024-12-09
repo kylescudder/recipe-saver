@@ -1,3 +1,10 @@
+import { type ClassValue, clsx } from 'clsx'
+import { twMerge } from 'tailwind-merge'
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs))
+}
+
 export const convertBase64ToFile = (base64String: string): File => {
   // Extract the base64 data
   const imageData = base64String.split(',')[1] // Remove "data:image/jpeg;base64," part

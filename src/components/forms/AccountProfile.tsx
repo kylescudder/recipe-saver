@@ -5,8 +5,17 @@ import React, { useState } from 'react'
 import Image from 'next/image'
 import { type IUser } from '@/lib/models/user'
 import { updateUser } from '@/lib/actions/user.actions'
-import { Button, FileInput, TextInput, Textarea } from '@mantine/core'
-import { useForm } from '@mantine/form'
+import { FieldValues, useForm } from 'react-hook-form'
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel
+} from '@/components/ui/form'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 
 interface Props {
   user: IUser
@@ -16,14 +25,16 @@ const AccountProfile = ({ user, btnTitle }: Props) => {
   const router = useRouter()
   const pathname = usePathname()
   const form = useForm({
-    initialValues: {
+    defaultValues: {
       image: user?.image ? user.image : '',
       username: user?.username ? user.username : '',
       name: user?.name ? user.name : '',
       bio: user?.bio ? user.bio : ''
     }
   })
-  const [imageString, setImageString] = useState<string>(form.values.image)
+  const [imageString, setImageString] = useState<string>(
+    form.getValues('image')
+  )
 
   interface formUser {
     image: string
@@ -49,85 +60,127 @@ const AccountProfile = ({ user, btnTitle }: Props) => {
     }
   }
 
-  const handleImage = (e: File): void => {
-    const fileReader = new FileReader()
-    if (!e.type.includes('image')) return
+  const handleImage = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
 
+    if (!file.type.includes('image')) return
+
+    const fileReader = new FileReader()
     fileReader.onload = () => {
       const base64String = fileReader.result
-      setImageString(base64String?.toString() ?? '')
-      form.values.image = base64String?.toString() ?? ''
+      setImageString(base64String?.toString() || '')
+      form.setValue('image', base64String?.toString() || '')
     }
 
-    fileReader.readAsDataURL(e)
+    fileReader.readAsDataURL(file)
   }
 
   return (
-    <form
-      onSubmit={form.onSubmit(async (values) => {
-        await onSubmit(values)
-      })}
-      className='flex flex-col justify-start gap-10'
-    >
-      {form.values.image ? (
-        <Image
-          src={imageString}
-          alt='profile_icon'
-          width={96}
-          height={96}
-          priority
-          className='rounded-full object-contain'
+    <Form {...form}>
+      <form
+        onSubmit={form.handleSubmit(onSubmit)}
+        className='flex flex-col justify-start gap-4'
+      >
+        {form.getValues('image') ? (
+          <Image
+            src={imageString}
+            alt='profile_icon'
+            width={96}
+            height={96}
+            priority
+            className='rounded-full object-contain'
+          />
+        ) : (
+          <Image
+            src='/assets/profile.svg'
+            alt='profile_icon'
+            width={24}
+            height={24}
+            className='object-contain'
+          />
+        )}
+        <FormField
+          control={form.control}
+          name='name'
+          render={({ field }: { field: FieldValues }) => (
+            <FormItem>
+              <FormLabel htmlFor='name'>Profile Picture</FormLabel>
+              <FormControl>
+                <div className='items-center gap-4'>
+                  <Input
+                    type='image'
+                    {...form}
+                    onChange={handleImage}
+                    id='image'
+                  />
+                </div>
+              </FormControl>
+            </FormItem>
+          )}
         />
-      ) : (
-        <Image
-          src='/assets/profile.svg'
-          alt='profile_icon'
-          width={24}
-          height={24}
-          className='object-contain'
+        <FormField
+          control={form.control}
+          name='name'
+          render={({ field }: { field: FieldValues }) => (
+            <FormItem>
+              <FormLabel htmlFor='name'>Name</FormLabel>
+              <FormControl>
+                <div className='items-center gap-4'>
+                  <Input
+                    {...field}
+                    id='name'
+                    className='text-base'
+                    placeholder="What's your name girl, what's you sign?"
+                  />
+                </div>
+              </FormControl>
+            </FormItem>
+          )}
         />
-      )}
-      <FileInput
-        label='Profile Picture'
-        radius='md'
-        className='text-dark-2 dark:text-light-2'
-        size='md'
-        {...form.getInputProps('image')}
-        onChange={(e) => {
-          if (e) {
-            handleImage(e)
-          }
-        }}
-      />
-      <TextInput
-        label='Name'
-        radius='md'
-        placeholder="What's your name girl, what's you sign?"
-        className='text-dark-2 dark:text-light-2'
-        size='md'
-        {...form.getInputProps('name')}
-      />
-      <TextInput
-        label='Username'
-        radius='md'
-        placeholder='your email address plz'
-        className='text-dark-2 dark:text-light-2'
-        size='md'
-        {...form.getInputProps('username')}
-      />
-      <Textarea
-        label='Bio'
-        radius='md'
-        placeholder='Tell me a little bit about yourself...'
-        className='text-dark-2 dark:text-light-2 text-lg font-semibold leading-6'
-        size='md'
-        minRows={8}
-        {...form.getInputProps('bio')}
-      />
-      <Button radius='md' size='md' className='bg-primary-500' type='submit'>
-        {btnTitle}
-      </Button>
-    </form>
+        <FormField
+          control={form.control}
+          name='username'
+          render={({ field }: { field: FieldValues }) => (
+            <FormItem>
+              <FormLabel htmlFor='username'>Username</FormLabel>
+              <FormControl>
+                <div className='items-center gap-4'>
+                  <Input
+                    {...field}
+                    id='username'
+                    className='text-base'
+                    placeholder='your email address plz'
+                  />
+                </div>
+              </FormControl>
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name='bio'
+          render={({ field }: { field: FieldValues }) => (
+            <FormItem>
+              <FormLabel htmlFor='bio'>Bio</FormLabel>
+              <FormControl>
+                <div className='items-center gap-4'>
+                  <Textarea
+                    id='bio'
+                    placeholder='Tell us a little bit about yourself'
+                    className='resize-none'
+                    {...field}
+                  />
+                </div>
+              </FormControl>
+            </FormItem>
+          )}
+        />
+        <Button className='hover:bg-primary-hover' type='submit'>
+          {btnTitle}
+        </Button>
+      </form>
+    </Form>
   )
 }
 

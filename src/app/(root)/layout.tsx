@@ -5,8 +5,13 @@ import { Inter } from 'next/font/google'
 import { ClerkProvider } from '@clerk/nextjs'
 import { dark } from '@clerk/themes'
 import Topbar from '@/components/shared/Topbar'
+import { ThemeProvider } from '@/components/theme-provider'
 
 const inter = Inter({ subsets: ['latin'] })
+
+export const viewport: Viewport = {
+  themeColor: '#877EFF'
+}
 
 export const metadata: Metadata = {
   title: 'Recipe Saver',
@@ -21,19 +26,26 @@ export default async function RootLayout({
 }) {
   return (
     <ClerkProvider
+      dynamic
       appearance={{
         baseTheme: dark
       }}
     >
       <html lang='en'>
         <body className={inter.className}>
-          <Topbar />
-
-          <main className='flex flex-row'>
-            <section className='bg-dark-1 flex min-h-screen flex-1 flex-col items-center px-6 pb-10 pt-28 max-md:pb-32 sm:px-10'>
-              <div className='w-full max-w-4xl'>{children}</div>
-            </section>
-          </main>
+          <ThemeProvider
+            attribute='class'
+            defaultTheme='system'
+            enableSystem
+            disableTransitionOnChange
+          >
+            <Topbar />
+            <main className='flex flex-row'>
+              <section className='bg-dark-1 flex min-h-screen flex-1 flex-col items-center px-6 pb-10 pt-28 max-md:pb-32 sm:px-10'>
+                <div className='w-full max-w-4xl'>{children}</div>
+              </section>
+            </main>
+          </ThemeProvider>
         </body>
       </html>
     </ClerkProvider>

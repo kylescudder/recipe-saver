@@ -5,7 +5,7 @@ import { getRecipes } from '@/lib/actions/recipe.actions'
 import { getUserInfo } from '@/lib/actions/user.actions'
 import { currentUser } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
-import { List } from '@/components/shared/List'
+import RecipeList from './recipes/page'
 
 async function Page() {
   const user = await currentUser()
@@ -18,7 +18,7 @@ async function Page() {
 
   return (
     <div>
-      <List records={recipes} />
+      <RecipeList recipes={recipes} />
     </div>
   )
 }
