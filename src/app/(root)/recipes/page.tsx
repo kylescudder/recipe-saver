@@ -63,7 +63,7 @@ export default function RecipeList(props: { recipes: IRecipe[] }) {
     const performFiltering = () => {
       if (searchValue !== '') {
         const lowercaseSearchValue = searchValue.toLowerCase()
-        const filtered = props.recipes.filter((record: IRecipe) =>
+        const filtered = recipes.filter((record: IRecipe) =>
           filterColumns.some((element) => {
             const value = (record as any)[element]
 
@@ -85,7 +85,7 @@ export default function RecipeList(props: { recipes: IRecipe[] }) {
         )
         return filtered
       } else {
-        return props.recipes
+        return recipes
       }
     }
 
@@ -95,7 +95,7 @@ export default function RecipeList(props: { recipes: IRecipe[] }) {
     if (JSON.stringify(filtered) !== JSON.stringify(filteredRecords)) {
       setFilteredRecords(filtered)
     }
-  }, [searchValue, props.recipes])
+  }, [searchValue, recipes])
 
   const focusRef = useRef<HTMLInputElement>(null)
   const isDesktop = useMediaQuery('(min-width: 768px)')
