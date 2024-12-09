@@ -11,7 +11,7 @@
     "prepare": "husky"
   },
   "dependencies": {
-    "@clerk/nextjs": "6.8.0",
+    "@clerk/nextjs": "6.8.1",
     "@clerk/themes": "2.1.53",
     "@hookform/resolvers": "3.9.1",
     "@radix-ui/react-dialog": "^1.1.2",
