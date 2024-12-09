@@ -1,11 +1,12 @@
 import '@/styles/globals.css'
 import React from 'react'
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import { ClerkProvider } from '@clerk/nextjs'
 import { dark } from '@clerk/themes'
 import Topbar from '@/components/shared/Topbar'
 import { ThemeProvider } from '@/components/theme-provider'
+import { Toaster } from '@/components/ui/sonner'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -46,6 +47,7 @@ export default async function RootLayout({
               </section>
             </main>
           </ThemeProvider>
+          <Toaster />
         </body>
       </html>
     </ClerkProvider>

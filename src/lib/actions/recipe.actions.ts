@@ -8,11 +8,17 @@ export async function getRecipes(): Promise<IRecipe[]> {
   try {
     await connectToDB()
 
-    return await Recipe.find({})
+    const recipes = await Recipe.find({ archive: false })
+
+    return recipes.map((recipe) => ({
+      ...recipe.toObject(),
+      _id: recipe._id.toString()
+    }))
   } catch (error: any) {
     throw new Error(`Failed to get recipes: ${error.message}`)
   }
 }
+
 export async function updateRecipe(recipeData: IRecipe) {
   try {
     connectToDB()
@@ -22,7 +28,7 @@ export async function updateRecipe(recipeData: IRecipe) {
       recipeData._id = newId.toString()
     }
 
-    return await Recipe.findOneAndUpdate(
+    const recipe = await Recipe.findOneAndUpdate(
       { _id: new mongoose.Types.ObjectId(recipeData._id) },
       {
         _id: new mongoose.Types.ObjectId(recipeData._id),
@@ -34,6 +40,11 @@ export async function updateRecipe(recipeData: IRecipe) {
       },
       { upsert: true, new: true }
     )
+
+    return {
+      ...recipe.toObject(),
+      _id: recipe._id.toString()
+    }
   } catch (error: any) {
     throw new Error(`Failed to create/update recipe: ${error.message}`)
   }
@@ -42,11 +53,10 @@ export async function archiveRecipe(id: string) {
   try {
     connectToDB()
 
-    return await Recipe.findOneAndUpdate(
+    await Recipe.findOneAndUpdate(
       { _id: new mongoose.Types.ObjectId(id) },
-      {
-        archive: true
-      }
+      { archive: true },
+      { new: true }
     )
   } catch (error: any) {
     throw new Error(`Failed to archive recipe: ${error.message}`)

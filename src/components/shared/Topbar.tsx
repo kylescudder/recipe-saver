@@ -1,5 +1,4 @@
 'use client'
-
 import React from 'react'
 import Link from 'next/link'
 import { IconHomeHeart } from '@tabler/icons-react'
@@ -8,7 +7,7 @@ import { ModeToggle } from '../ui/dark-mode-toggle'
 
 export default function Topbar() {
   return (
-    <nav className='topbar'>
+    <nav className='flex w-full items-center justify-between px-4 py-2'>
       <Link href='/' className='flex items-center gap-4'>
         <IconHomeHeart
           stroke={1}
@@ -20,12 +19,10 @@ export default function Topbar() {
           Recipe Saver
         </p>
       </Link>
-
-      <div className='flex items-center gap-1'>
+      <div className='flex items-center gap-4'>
         <ModeToggle />
-        <div className='block md:hidden'></div>
+        <Logout />
       </div>
-      <Logout />
     </nav>
   )
 }

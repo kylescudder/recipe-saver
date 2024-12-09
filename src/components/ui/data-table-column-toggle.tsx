@@ -19,17 +19,15 @@ export function DataTableViewOptions<TData>({
   table
 }: DataTableViewOptionsProps<TData>) {
   // Helper function to get a user-friendly column label
-  const getColumnLabel = (column: Column<TData, unknown>) => {
-    // First, check if the column has a title property from the column definition
+  const getColumnLabel = (column: Column<TData, unknown>): React.ReactNode => {
     if (
       column.columnDef &&
       'title' in column.columnDef &&
       column.columnDef.title
     ) {
-      return column.columnDef.title
+      return column.columnDef.title as React.ReactNode
     }
 
-    // If no title, try to create a label from the id by splitting camelCase and capitalizing
     const id = column.id
     return id
       .replace(/([A-Z])/g, ' $1') // Insert space before capital letters
