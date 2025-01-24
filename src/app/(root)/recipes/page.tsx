@@ -126,7 +126,7 @@ export default function RecipeList(props: { recipes: IRecipe[] }) {
               href={recipe.recipeLink}
               target='_blank'
               rel='noopener noreferrer'
-              className='text-blue-600 hover:underline'
+              className='text-primary hover:underline'
             >
               {recipe.recipeLink}
             </Link>
