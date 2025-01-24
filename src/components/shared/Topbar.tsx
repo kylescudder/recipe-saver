@@ -15,7 +15,7 @@ export default function Topbar() {
           height={28}
           width={28}
         />
-        <p className='text-light-1 max-xs:hidden text-2xl font-bold leading-6'>
+        <p className='text-light-1 max-xs:hidden text-2xl leading-6 font-bold'>
           Recipe Saver
         </p>
       </Link>

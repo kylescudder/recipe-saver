@@ -29,12 +29,12 @@ export default async function page() {
   return (
     <main className='mx-auto flex max-w-3xl flex-col justify-start px-10 py-20'>
       <div className='flex justify-between'>
-        <h1 className='head-text text-dark-1 dark:text-light-1 text-3xl font-bold leading-6'>
+        <h1 className='head-text text-dark-1 dark:text-light-1 text-3xl leading-6 font-bold'>
           Onboarding
         </h1>
         <Logout />
       </div>
-      <p className='text-dark-2 dark:text-light-2 mt-3 text-base font-normal leading-6'>
+      <p className='text-dark-2 dark:text-light-2 mt-3 text-base leading-6 font-normal'>
         Complete your profile now to use the Date Pot
       </p>
       <section className='bg-dark-2 mt-9 p-10'>
