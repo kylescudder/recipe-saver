@@ -41,7 +41,7 @@
     "tailwindcss": "4.0.0",
     "tailwindcss-animate": "1.0.7",
     "typescript": "5.9.2",
-    "vaul": "1.1.1"
+    "vaul": "1.1.2"
   },
   "devDependencies": {
     "husky": "9.1.7",
