@@ -35,7 +35,7 @@
     "prettier-plugin-tailwindcss": "0.6.14",
     "react": "19.1.1",
     "react-dom": "19.1.1",
-    "serwist": "9.1.1",
+    "serwist": "9.2.1",
     "sonner": "2.0.7",
     "tailwind-merge": "3.3.1",
     "tailwindcss": "4.0.0",
