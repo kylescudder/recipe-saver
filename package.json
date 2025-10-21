@@ -24,7 +24,7 @@
     "@tabler/icons-react": "3.35.0",
     "@tailwindcss/postcss": "4.1.15",
     "@tanstack/react-table": "8.21.3",
-    "@types/node": "24.8.1",
+    "@types/node": "24.9.1",
     "@types/react": "19.2.2",
     "@types/react-dom": "19.2.2",
     "class-variance-authority": "0.7.1",
