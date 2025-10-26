@@ -1,118 +1,118 @@
-'use client'
+"use client";
 
-import { usePathname, useRouter } from 'next/navigation'
-import React, { useState } from 'react'
-import Image from 'next/image'
-import { type IUser } from '@/lib/models/user'
-import { updateUser } from '@/lib/actions/user.actions'
-import { FieldValues, useForm } from 'react-hook-form'
+import { usePathname, useRouter } from "next/navigation";
+import React, { useState } from "react";
+import Image from "next/image";
+import { type IUser } from "@/lib/models/user";
+import { updateUser } from "@/lib/actions/user.actions";
+import { FieldValues, useForm } from "react-hook-form";
 import {
   Form,
   FormControl,
   FormField,
   FormItem,
-  FormLabel
-} from '@/components/ui/form'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
+  FormLabel,
+} from "@/components/ui/form";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 
 interface Props {
-  user: IUser
-  btnTitle: string
+  user: IUser;
+  btnTitle: string;
 }
 const AccountProfile = ({ user, btnTitle }: Props) => {
-  const router = useRouter()
-  const pathname = usePathname()
+  const router = useRouter();
+  const pathname = usePathname();
   const form = useForm({
     defaultValues: {
-      image: user?.image ? user.image : '',
-      username: user?.username ? user.username : '',
-      name: user?.name ? user.name : '',
-      bio: user?.bio ? user.bio : ''
-    }
-  })
+      image: user?.image ? user.image : "",
+      username: user?.username ? user.username : "",
+      name: user?.name ? user.name : "",
+      bio: user?.bio ? user.bio : "",
+    },
+  });
   const [imageString, setImageString] = useState<string>(
-    form.getValues('image')
-  )
+    form.getValues("image"),
+  );
 
   interface formUser {
-    image: string
-    username: string
-    name: string
-    bio: string
+    image: string;
+    username: string;
+    name: string;
+    bio: string;
   }
   const onSubmit = async (values: formUser): Promise<void> => {
     const payload: IUser = {
-      _id: '',
+      _id: "",
       username: values.username,
       name: values.name,
       bio: values.bio,
       clerkId: user.clerkId,
       image: values.image,
-      onboarded: true
-    }
-    await updateUser(payload, pathname)
-    if (pathname === '/profile/edit') {
-      router.back()
+      onboarded: true,
+    };
+    await updateUser(payload, pathname);
+    if (pathname === "/profile/edit") {
+      router.back();
     } else {
-      router.push('/')
+      router.push("/");
     }
-  }
+  };
 
   const handleImage = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-    if (!file.type.includes('image')) return
+    if (!file.type.includes("image")) return;
 
-    const fileReader = new FileReader()
+    const fileReader = new FileReader();
     fileReader.onload = () => {
-      const base64String = fileReader.result
-      setImageString(base64String?.toString() || '')
-      form.setValue('image', base64String?.toString() || '')
-    }
+      const base64String = fileReader.result;
+      setImageString(base64String?.toString() || "");
+      form.setValue("image", base64String?.toString() || "");
+    };
 
-    fileReader.readAsDataURL(file)
-  }
+    fileReader.readAsDataURL(file);
+  };
 
   return (
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
-        className='flex flex-col justify-start gap-4'
+        className="flex flex-col justify-start gap-4"
       >
-        {form.getValues('image') ? (
+        {form.getValues("image") ? (
           <Image
             src={imageString}
-            alt='profile_icon'
+            alt="profile_icon"
             width={96}
             height={96}
             priority
-            className='rounded-full object-contain'
+            className="rounded-full object-contain"
           />
         ) : (
           <Image
-            src='/assets/profile.svg'
-            alt='profile_icon'
+            src="/assets/profile.svg"
+            alt="profile_icon"
             width={24}
             height={24}
-            className='object-contain'
+            className="object-contain"
           />
         )}
         <FormField
           control={form.control}
-          name='name'
+          name="name"
           render={({ field }: { field: FieldValues }) => (
             <FormItem>
-              <FormLabel htmlFor='name'>Profile Picture</FormLabel>
+              <FormLabel htmlFor="name">Profile Picture</FormLabel>
               <FormControl>
-                <div className='items-center gap-4'>
+                <div className="items-center gap-4">
                   <Input
-                    type='image'
+                    type="image"
                     {...form}
                     onChange={handleImage}
-                    id='image'
+                    id="image"
                   />
                 </div>
               </FormControl>
@@ -121,16 +121,16 @@ const AccountProfile = ({ user, btnTitle }: Props) => {
         />
         <FormField
           control={form.control}
-          name='name'
+          name="name"
           render={({ field }: { field: FieldValues }) => (
             <FormItem>
-              <FormLabel htmlFor='name'>Name</FormLabel>
+              <FormLabel htmlFor="name">Name</FormLabel>
               <FormControl>
-                <div className='items-center gap-4'>
+                <div className="items-center gap-4">
                   <Input
                     {...field}
-                    id='name'
-                    className='text-base'
+                    id="name"
+                    className="text-base"
                     placeholder="What's your name girl, what's you sign?"
                   />
                 </div>
@@ -140,17 +140,17 @@ const AccountProfile = ({ user, btnTitle }: Props) => {
         />
         <FormField
           control={form.control}
-          name='username'
+          name="username"
           render={({ field }: { field: FieldValues }) => (
             <FormItem>
-              <FormLabel htmlFor='username'>Username</FormLabel>
+              <FormLabel htmlFor="username">Username</FormLabel>
               <FormControl>
-                <div className='items-center gap-4'>
+                <div className="items-center gap-4">
                   <Input
                     {...field}
-                    id='username'
-                    className='text-base'
-                    placeholder='your email address plz'
+                    id="username"
+                    className="text-base"
+                    placeholder="your email address plz"
                   />
                 </div>
               </FormControl>
@@ -159,16 +159,16 @@ const AccountProfile = ({ user, btnTitle }: Props) => {
         />
         <FormField
           control={form.control}
-          name='bio'
+          name="bio"
           render={({ field }: { field: FieldValues }) => (
             <FormItem>
-              <FormLabel htmlFor='bio'>Bio</FormLabel>
+              <FormLabel htmlFor="bio">Bio</FormLabel>
               <FormControl>
-                <div className='items-center gap-4'>
+                <div className="items-center gap-4">
                   <Textarea
-                    id='bio'
-                    placeholder='Tell us a little bit about yourself'
-                    className='resize-none'
+                    id="bio"
+                    placeholder="Tell us a little bit about yourself"
+                    className="resize-none"
                     {...field}
                   />
                 </div>
@@ -176,12 +176,12 @@ const AccountProfile = ({ user, btnTitle }: Props) => {
             </FormItem>
           )}
         />
-        <Button className='hover:bg-primary-hover' type='submit'>
+        <Button className="hover:bg-primary-hover" type="submit">
           {btnTitle}
         </Button>
       </form>
     </Form>
-  )
-}
+  );
+};
 
-export default AccountProfile
+export default AccountProfile;

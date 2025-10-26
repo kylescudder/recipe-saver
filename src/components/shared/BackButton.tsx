@@ -1,38 +1,38 @@
-import React, { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { IconArrowNarrowLeft } from '@tabler/icons-react'
-import { Button } from '@/components/ui/button'
+import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { IconArrowNarrowLeft } from "@tabler/icons-react";
+import { Button } from "@/components/ui/button";
 
 export default function BackButton(props: {
-  record: any
-  changesMade: boolean
-  page: string
+  record: any;
+  changesMade: boolean;
+  page: string;
 }) {
-  const [changesMade, setChangesMade] = useState<boolean>(props.changesMade)
+  const [changesMade, setChangesMade] = useState<boolean>(props.changesMade);
 
   useEffect(() => {
-    setChangesMade(props.changesMade)
-  }, [props.changesMade])
+    setChangesMade(props.changesMade);
+  }, [props.changesMade]);
 
-  const router = useRouter()
+  const router = useRouter();
   const handleBack = () => {
     if (changesMade) {
-      const url = `${window.location.protocol}//${window.location.host}`
-      window.location.href = `${url}/${props.page}`
+      const url = `${window.location.protocol}//${window.location.host}`;
+      window.location.href = `${url}/${props.page}`;
     } else {
-      router.back()
+      router.back();
     }
-  }
+  };
 
   return (
     <Button
       className={`hover:bg-primary-hover bg-primary-500 ${
-        props.record._id === '' ? 'hidden' : ''
+        props.record._id === "" ? "hidden" : ""
       }`}
       onClick={handleBack}
-      aria-label='back'
+      aria-label="back"
     >
-      <IconArrowNarrowLeft className='text-light-1' />
+      <IconArrowNarrowLeft className="text-light-1" />
     </Button>
-  )
+  );
 }
