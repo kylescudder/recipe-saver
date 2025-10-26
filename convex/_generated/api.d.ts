@@ -16,8 +16,12 @@ import type {
   FunctionReference,
 } from "convex/server";
 import type * as http from "../http.js";
+import type * as http from "../http.js";
+import type * as migrate from "../migrate.js";
 import type * as migrate from "../migrate.js";
 import type * as recipes from "../recipes.js";
+import type * as recipes from "../recipes.js";
+import type * as users from "../users.js";
 import type * as users from "../users.js";
 
 /**
@@ -30,8 +34,12 @@ import type * as users from "../users.js";
  */
 declare const fullApi: ApiFromModules<{
   http: typeof http;
+  http: typeof http;
+  migrate: typeof migrate;
   migrate: typeof migrate;
   recipes: typeof recipes;
+  recipes: typeof recipes;
+  users: typeof users;
   users: typeof users;
 }>;
 export declare const api: FilterApi<
