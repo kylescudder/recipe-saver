@@ -18,7 +18,10 @@ Adding these files does not complete a production cutover. The source repository
 had no Herman installation, GitHub release credentials or variables. The fresh
 `recipe_saver` database and scoped roles have now been provisioned on Herman and
 registered for backups; the existing Clerk publishable key is configured in GitHub. Its recorded
-Vercel homepage returned 404 during the audit. Kyle approved starting with a fresh database; historical Mongo data is optional.
+Vercel homepage returned 404 during the audit. The repository also retains an
+active Netlify Git integration for `mill-drive-recipe-saver`; `netlify.toml` skips
+its obsolete builds. Retain its existing deployment until Herman acceptance and
+only then remove the legacy project/integration. Kyle approved starting with a fresh database; historical Mongo data is optional.
 Use the existing Recipe Saver Clerk instance, which was located in the authenticated
 Clerk dashboard. Do not substitute another app's Clerk instance.
 
