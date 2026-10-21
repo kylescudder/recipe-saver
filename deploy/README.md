@@ -98,7 +98,12 @@ is Herman and preserve unrelated registry entries and application routes.
     header. Test real Clerk sign-in, existing profile recognition, recipe search,
     website/book save, archive, refresh and persistence after container restart.
     Archive evidence under the platform's `verification/`. Update its runbook and
-    repository homepage after successful cutover.
+    repository homepage after successful cutover. The existing public `recipes.kylescudder.co.uk`
+    currently points at Netlify and returns a Clerk/Next 404. Before hostname
+    registration, archive its DNS record metadata privately, then explicitly
+    migrate that record using the platform onboarding procedure; the hostname
+    tool refuses to overwrite an unrelated DNS record. Retain the Netlify
+    deployment until the new hostname and real sign-in pass acceptance.
 
 ## Automated releases and recovery
 
