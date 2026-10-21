@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import {
   ClerkProvider,
@@ -141,7 +141,14 @@ declare module '@tanstack/react-router' {
 }
 
 function App() {
-  const { getToken, userId } = useAuth()
+  const { isLoaded, userId } = useAuth()
+  if (!isLoaded) return <p role='status'>Loading…</p>
+  // A fresh provider per identity isolates cached household/profile data without
+  // cancelling the new identity's active queries during its first render.
+  return <SessionApp key={userId ?? 'signed-out'} />
+}
+function SessionApp() {
+  const { getToken } = useAuth()
   const [queryClient] = useState(
     () => new QueryClient({ defaultOptions: { queries: { retry: 1 } } })
   )
@@ -158,9 +165,6 @@ function App() {
       ]
     })
   )
-  useEffect(() => {
-    queryClient.clear()
-  }, [userId, queryClient])
   return (
     <trpc.Provider client={client} queryClient={queryClient}>
       <QueryClientProvider client={queryClient}>
