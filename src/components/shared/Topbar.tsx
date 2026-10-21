@@ -1,6 +1,6 @@
 'use client'
 import React from 'react'
-import Link from 'next/link'
+import { Link } from '@tanstack/react-router'
 import { IconHomeHeart } from '@tabler/icons-react'
 import Logout from './Logout'
 import { ModeToggle } from '../ui/dark-mode-toggle'
@@ -8,7 +8,7 @@ import { ModeToggle } from '../ui/dark-mode-toggle'
 export default function Topbar() {
   return (
     <nav className='flex w-full items-center justify-between px-4 py-2'>
-      <Link href='/' className='flex items-center gap-4'>
+      <Link to='/' className='flex items-center gap-4'>
         <IconHomeHeart
           stroke={1}
           strokeLinejoin='miter'

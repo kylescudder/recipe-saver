@@ -1,187 +1,68 @@
-'use client'
-
-import { usePathname, useRouter } from 'next/navigation'
-import React, { useState } from 'react'
-import Image from 'next/image'
-import { type IUser } from '@/lib/models/user'
-import { updateUser } from '@/lib/actions/user.actions'
-import { FieldValues, useForm } from 'react-hook-form'
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel
-} from '@/components/ui/form'
-import { Button } from '@/components/ui/button'
+import { useState } from 'react'
+import { useNavigate } from '@tanstack/react-router'
+import { trpc } from '@/lib/trpc'
+import type { IUser } from '@/lib/models/user'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-
-interface Props {
+import { Button } from '@/components/ui/button'
+import { toast } from 'sonner'
+export default function AccountProfile({
+  user,
+  btnTitle
+}: {
   user: IUser
   btnTitle: string
-}
-const AccountProfile = ({ user, btnTitle }: Props) => {
-  const router = useRouter()
-  const pathname = usePathname()
-  const form = useForm({
-    defaultValues: {
-      image: user?.image ? user.image : '',
-      username: user?.username ? user.username : '',
-      name: user?.name ? user.name : '',
-      bio: user?.bio ? user.bio : ''
-    }
+}) {
+  const [name, setName] = useState(user.name)
+  const [username, setUsername] = useState(user.username)
+  const [bio, setBio] = useState(user.bio)
+  const navigate = useNavigate()
+  const utils = trpc.useUtils()
+  const save = trpc.profile.save.useMutation({
+    onSuccess: async () => {
+      await utils.profile.me.invalidate()
+      await navigate({ to: '/' })
+    },
+    onError: () =>
+      toast.error(
+        'Could not save your profile. Check your username and try again.'
+      )
   })
-  const [imageString, setImageString] = useState<string>(
-    form.getValues('image')
-  )
-
-  interface formUser {
-    image: string
-    username: string
-    name: string
-    bio: string
-  }
-  const onSubmit = async (values: formUser): Promise<void> => {
-    const payload: IUser = {
-      _id: '',
-      username: values.username,
-      name: values.name,
-      bio: values.bio,
-      clerkId: user.clerkId,
-      image: values.image,
-      onboarded: true
-    }
-    await updateUser(payload, pathname)
-    if (pathname === '/profile/edit') {
-      router.back()
-    } else {
-      router.push('/')
-    }
-  }
-
-  const handleImage = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-
-    if (!file.type.includes('image')) return
-
-    const fileReader = new FileReader()
-    fileReader.onload = () => {
-      const base64String = fileReader.result
-      setImageString(base64String?.toString() || '')
-      form.setValue('image', base64String?.toString() || '')
-    }
-
-    fileReader.readAsDataURL(file)
-  }
-
   return (
-    <Form {...form}>
-      <form
-        onSubmit={form.handleSubmit(onSubmit)}
-        className='flex flex-col justify-start gap-4'
-      >
-        {form.getValues('image') ? (
-          <Image
-            src={imageString}
-            alt='profile_icon'
-            width={96}
-            height={96}
-            priority
-            className='rounded-full object-contain'
-          />
-        ) : (
-          <Image
-            src='/assets/profile.svg'
-            alt='profile_icon'
-            width={24}
-            height={24}
-            className='object-contain'
-          />
-        )}
-        <FormField
-          control={form.control}
-          name='name'
-          render={({ field }: { field: FieldValues }) => (
-            <FormItem>
-              <FormLabel htmlFor='name'>Profile Picture</FormLabel>
-              <FormControl>
-                <div className='items-center gap-4'>
-                  <Input
-                    type='image'
-                    {...form}
-                    onChange={handleImage}
-                    id='image'
-                  />
-                </div>
-              </FormControl>
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name='name'
-          render={({ field }: { field: FieldValues }) => (
-            <FormItem>
-              <FormLabel htmlFor='name'>Name</FormLabel>
-              <FormControl>
-                <div className='items-center gap-4'>
-                  <Input
-                    {...field}
-                    id='name'
-                    className='text-base'
-                    placeholder="What's your name girl, what's you sign?"
-                  />
-                </div>
-              </FormControl>
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name='username'
-          render={({ field }: { field: FieldValues }) => (
-            <FormItem>
-              <FormLabel htmlFor='username'>Username</FormLabel>
-              <FormControl>
-                <div className='items-center gap-4'>
-                  <Input
-                    {...field}
-                    id='username'
-                    className='text-base'
-                    placeholder='your email address plz'
-                  />
-                </div>
-              </FormControl>
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name='bio'
-          render={({ field }: { field: FieldValues }) => (
-            <FormItem>
-              <FormLabel htmlFor='bio'>Bio</FormLabel>
-              <FormControl>
-                <div className='items-center gap-4'>
-                  <Textarea
-                    id='bio'
-                    placeholder='Tell us a little bit about yourself'
-                    className='resize-none'
-                    {...field}
-                  />
-                </div>
-              </FormControl>
-            </FormItem>
-          )}
-        />
-        <Button className='hover:bg-primary-hover' type='submit'>
-          {btnTitle}
-        </Button>
-      </form>
-    </Form>
+    <form
+      className='flex flex-col gap-4'
+      onSubmit={(event) => {
+        event.preventDefault()
+        save.mutate({ name, username, bio, image: user.image })
+      }}
+    >
+      <label htmlFor='name'>Name</label>
+      <Input
+        id='name'
+        required
+        maxLength={100}
+        value={name}
+        onChange={(event) => setName(event.target.value)}
+      />
+      <label htmlFor='username'>Username</label>
+      <Input
+        id='username'
+        required
+        minLength={3}
+        maxLength={200}
+        value={username}
+        onChange={(event) => setUsername(event.target.value)}
+      />
+      <label htmlFor='bio'>Bio</label>
+      <Textarea
+        id='bio'
+        maxLength={2000}
+        value={bio}
+        onChange={(event) => setBio(event.target.value)}
+      />
+      <Button type='submit' disabled={save.isPending}>
+        {btnTitle}
+      </Button>
+    </form>
   )
 }
-
-export default AccountProfile
