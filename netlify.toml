@@ -1,0 +1,5 @@
+# Herman's attested GHCR/deploy-core pipeline owns releases. Skip the legacy
+# Netlify Git integration; keep the previous deployment available during cutover.
+# Netlify documents exit 0 as 'ignore this build'.
+[build]
+  ignore = "exit 0"
