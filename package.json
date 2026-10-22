@@ -11,12 +11,15 @@
     "typecheck": "tsc --noEmit",
     "test": "bun test server/*.test.ts",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@clerk/backend": "3.25.0",
     "@clerk/react": "6.17.8",
     "@clerk/themes": "2.4.29",
+    "@fontsource-variable/dm-sans": "^5.3.0",
+    "@fontsource-variable/lora": "^5.3.0",
     "@hookform/resolvers": "5.9.2",
     "@radix-ui/react-dialog": "1.1.15",
     "@radix-ui/react-dropdown-menu": "2.1.16",
@@ -45,6 +48,7 @@
     "zod": "4.1.13"
   },
   "devDependencies": {
+    "@playwright/test": "^1.64.1",
     "@tailwindcss/postcss": "4.1.18",
     "@types/bun": "1.4.3",
     "@types/react": "19.2.7",

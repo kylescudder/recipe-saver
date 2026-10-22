@@ -46,7 +46,7 @@ export function DataTableColumnHeader<TData, TValue>({
             {column.getIsSorted() === 'desc' ? (
               <IconCaretDown className='ml-2 h-4 w-4' />
             ) : column.getIsSorted() === 'asc' ? (
-              <IconCaretDown className='ml-2 h-4 w-4' />
+              <IconCaretUp className='ml-2 h-4 w-4' />
             ) : (
               <IconCaretUpDown className='ml-2 h-4 w-4' />
             )}
@@ -55,11 +55,11 @@ export function DataTableColumnHeader<TData, TValue>({
         <DropdownMenuContent align='start'>
           <DropdownMenuItem onClick={() => column.toggleSorting(false)}>
             <IconCaretUp className='text-muted-foreground/70 mr-2 h-3.5 w-3.5' />
-            Asc
+            A to Z
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => column.toggleSorting(true)}>
             <IconCaretDown className='text-muted-foreground/70 mr-2 h-3.5 w-3.5' />
-            Desc
+            Z to A
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => column.toggleVisibility(false)}>
