@@ -191,7 +191,8 @@ createRoot(document.getElementById('root')!).render(
     <p role='alert'>Recipe Saver needs its Clerk publishable key configured.</p>
   )
 )
-// Retire the old Next/Serwist worker so cached pages cannot mask this release.
+// The app ships no service worker; remove any stale registration so cached pages
+// cannot mask a release.
 if ('serviceWorker' in navigator)
   navigator.serviceWorker
     .getRegistrations()
