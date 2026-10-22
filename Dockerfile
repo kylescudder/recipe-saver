@@ -23,7 +23,7 @@ COPY --from=production-dependencies --chown=bun:bun /app/node_modules ./node_mod
 COPY --from=build --chown=bun:bun /app/dist ./dist
 COPY --chown=bun:bun server ./server
 COPY --chown=bun:bun src/lib/models ./src/lib/models
-COPY --chown=bun:bun deploy/healthcheck.ts deploy/verify.ts deploy/import-mongo.ts ./deploy/
+COPY --chown=bun:bun deploy/healthcheck.ts deploy/verify.ts ./deploy/
 USER bun
 EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \

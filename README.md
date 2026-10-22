@@ -5,7 +5,7 @@ Save website recipes and cookbook page references in a shared household collecti
 React/Vite runs with TanStack Router, Query and Table. A typed tRPC API runs on Bun,
 Clerk authenticates every profile/recipe procedure, and PostgreSQL persists recipes
 and profiles. Recipe access requires an onboarded Clerk session. The household
-collection remains shared between onboarded users, as in the previous application.
+collection is shared between onboarded users.
 
 ## Development
 
@@ -30,6 +30,5 @@ at Herman's shared production administrator connection.
 
 ## Herman production
 
-See [deploy/README.md](deploy/README.md) for the database import, private container,
+See [deploy/README.md](deploy/README.md) for the private container, database,
 Clerk configuration, central deploy-core registration, CI/CD and rollback procedure.
-There is no Next.js/Vercel runtime or MongoDB connection in this application.

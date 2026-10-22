@@ -4,7 +4,6 @@ import postgres from 'postgres'
 import { database, migrate } from './db'
 import { appRouter } from './router'
 import { createApp } from './app'
-import { importSnapshot } from '../deploy/import-mongo'
 
 if (!process.env.TEST_DATABASE_URL)
   throw new Error(
@@ -148,47 +147,6 @@ test('owner migrations are repeatable; runtime cannot perform DDL or enter anoth
   await denied(runtime.unsafe('CREATE SCHEMA forbidden'))
   await denied(runtime.unsafe('CREATE ROLE forbidden'))
   await denied(client(runtimeName, otherName)`SELECT 1`)
-})
-test('Mongo export import preserves IDs, archived rows and profiles; repeat and conflict are safe', async () => {
-  const recipes = [
-    { ...recipe, _id: { $oid: '0123456789abcdef01234567' }, archive: true }
-  ]
-  const users = [
-    {
-      _id: { $oid: '1123456789abcdef01234567' },
-      clerkId: 'legacy-clerk',
-      username: 'legacy-user',
-      name: 'Legacy User',
-      bio: '🍲',
-      image: '',
-      onboarded: true
-    }
-  ]
-  expect(await importSnapshot(owner, recipes, users)).toEqual({
-    recipes: 1,
-    users: 1
-  })
-  expect(await importSnapshot(owner, recipes, users)).toEqual({
-    recipes: 1,
-    users: 1
-  })
-  expect((await caller('legacy-clerk').profile.me())?.bio).toBe('🍲')
-  expect(
-    (
-      await runtime`SELECT archive FROM recipes WHERE id = '0123456789abcdef01234567'`
-    )[0].archive
-  ).toBe(true)
-  const newRow = { ...recipe, _id: 'new-rollback-row' }
-  await expect(
-    importSnapshot(
-      owner,
-      [newRow, { ...recipes[0], recipeName: 'Conflicting edit' }],
-      users
-    )
-  ).rejects.toThrow('import rolled back')
-  expect(
-    (await runtime`SELECT id FROM recipes WHERE id = 'new-rollback-row'`).length
-  ).toBe(0)
 })
 test('HTTP routing, error redaction, bearer auth boundary, cache headers, assets and health', async () => {
   const origin = 'https://recipes.example'
