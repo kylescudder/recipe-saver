@@ -1,6 +1,6 @@
 import postgres from 'postgres'
 
-export function testDatabase() {
+export function validateTestDatabaseUrl() {
   const value = process.env.E2E_DATABASE_URL
   if (!value)
     throw new Error(
@@ -8,6 +8,7 @@ export function testDatabase() {
     )
   const url = new URL(value)
   if (
+    !['postgres:', 'postgresql:'].includes(url.protocol) ||
     !['localhost', '127.0.0.1'].includes(url.hostname) ||
     !/^\/recipe_(e2e|redesign)(_|$)/.test(url.pathname)
   ) {
@@ -15,5 +16,9 @@ export function testDatabase() {
       'E2E_DATABASE_URL must identify a disposable local test database.'
     )
   }
-  return postgres(value, { max: 1 })
+  return value
+}
+
+export function testDatabase() {
+  return postgres(validateTestDatabaseUrl(), { max: 1 })
 }

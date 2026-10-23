@@ -9,7 +9,7 @@
     "start": "bun server/index.ts",
     "db:migrate": "bun server/migrate.ts",
     "typecheck": "tsc --noEmit",
-    "test": "bun test server/*.test.ts",
+    "test": "bun test server/*.test.ts tests/*.test.ts",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test:e2e": "playwright test"

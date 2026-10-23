@@ -43,6 +43,10 @@ profiles and recipes to exercise onboarding and empty states. They do not create
 Clerk accounts. `E2E_BASE_URL` defaults to `http://localhost:5174`; set `APP_ORIGIN`
 to the same address when starting the API.
 
+Global setup validates the disposable PostgreSQL URL before launching a browser
+or signing in. The setup guard tests run as part of `bun run test`, or standalone
+without a database or login using `bun test tests/e2e-setup.test.ts`.
+
 ```sh
 bunx --no-install playwright install chromium
 bun run test:e2e

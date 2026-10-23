@@ -1,7 +1,9 @@
 import { chromium, expect, type FullConfig } from '@playwright/test'
 import { mkdir, chmod } from 'node:fs/promises'
+import { validateTestDatabaseUrl } from './database'
 
 export default async function setup(config: FullConfig) {
+  validateTestDatabaseUrl()
   const baseURL = config.projects[0].use.baseURL!
   if (!['localhost', '127.0.0.1'].includes(new URL(baseURL).hostname)) {
     throw new Error('E2E verification requires a local disposable environment.')

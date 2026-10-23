@@ -19,6 +19,7 @@
   "include": [
     "src",
     "server",
+    "tests",
     "deploy/*.ts",
     "vite.config.ts",
     "playwright.config.ts",
