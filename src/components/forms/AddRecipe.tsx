@@ -1,180 +1,185 @@
-'use client'
-
-import { IRecipe } from '@/lib/models/recipe'
-
 import { useState } from 'react'
+import { IconBook2, IconLink, IconPlus } from '@tabler/icons-react'
 import { trpc } from '@/lib/trpc'
-import { FieldValues, useForm } from 'react-hook-form'
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel
-} from '@/components/ui/form'
+import { useForm } from 'react-hook-form'
+import type { IRecipe } from '@/lib/models/recipe'
 import { Input } from '@/components/ui/input'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import { Label } from '@/components/ui/label'
-import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
+import { toast } from 'sonner'
 
-export default function AddRecipe(props: { open: (open: boolean) => void }) {
-  const [selectedValue, setSelectedValue] = useState('website')
+export default function AddRecipe({ open }: { open: (open: boolean) => void }) {
+  const [source, setSource] = useState('website')
+  const [error, setError] = useState('')
   const utils = trpc.useUtils()
   const save = trpc.recipes.save.useMutation({
-    onSuccess: () => utils.recipes.list.invalidate(),
-    onError: (error) => toast.error(error.message)
+    onSuccess: () => utils.recipes.list.invalidate()
   })
-
-  interface formRecipe {
-    _id: string
+  const {
+    register,
+    handleSubmit,
+    formState: { errors }
+  } = useForm({
+    shouldUnregister: true,
+    defaultValues: {
+      recipeName: '',
+      recipeLink: '',
+      recipeBook: '',
+      recipePageNo: ''
+    }
+  })
+  async function onSubmit(values: {
     recipeName: string
     recipeLink: string
     recipeBook: string
     recipePageNo: string
-    archive: boolean
-  }
-
-  const form = useForm({
-    defaultValues: {
-      _id: '',
-      recipeName: '',
-      recipeLink: '',
-      recipeBook: '',
-      recipePageNo: '',
-      archive: false
-    }
-  })
-
-  const onSubmit = async (values: formRecipe) => {
+  }) {
+    setError('')
     const payload: IRecipe = {
+      ...values,
       _id: '',
-      recipeName: values.recipeName,
-      recipeLink: selectedValue === 'website' ? values.recipeLink : '',
-      recipeBook: selectedValue === 'book' ? values.recipeBook : '',
-      recipePageNo: selectedValue === 'book' ? values.recipePageNo : '',
-      archive: false
+      archive: false,
+      recipeLink: source === 'website' ? values.recipeLink.trim() : '',
+      recipeBook: source === 'book' ? values.recipeBook.trim() : '',
+      recipePageNo: source === 'book' ? values.recipePageNo.trim() : ''
     }
-
     try {
       await save.mutateAsync(payload)
-      props.open(false)
-      toast('Recipe added!')
+      open(false)
+      toast.success('Recipe added')
     } catch {
-      /* mutation reports the error */
+      setError(
+        'Your recipe could not be saved. Check the details and try again.'
+      )
     }
   }
-
-  const handleChange = (value: string) => {
-    setSelectedValue(value)
-  }
   return (
-    <div className='flex items-center justify-between'>
-      <Form {...form}>
-        <form
-          onSubmit={form.handleSubmit(onSubmit)}
-          className={`} flex w-full flex-col justify-start gap-4 pt-4`}
+    <form className='recipe-form' noValidate onSubmit={handleSubmit(onSubmit)}>
+      <div className='form-field'>
+        <label htmlFor='recipeName'>Recipe name</label>
+        <Input
+          id='recipeName'
+          placeholder='e.g. Sunday morning pancakes'
+          maxLength={300}
+          aria-invalid={!!errors.recipeName}
+          aria-describedby={errors.recipeName ? 'name-error' : undefined}
+          {...register('recipeName', {
+            validate: (value) => !!value.trim() || 'Give your recipe a name.'
+          })}
+        />
+        {errors.recipeName && (
+          <p className='field-error' id='name-error' role='alert'>
+            {errors.recipeName.message}
+          </p>
+        )}
+      </div>
+      <fieldset className='source-fieldset'>
+        <legend>Where is it from?</legend>
+        <RadioGroup
+          className='source-options'
+          value={source}
+          onValueChange={(value) => {
+            setSource(value)
+            setError('')
+          }}
+          aria-label='Recipe source'
         >
-          <FormField
-            control={form.control}
-            name='recipeName'
-            render={({ field }: { field: FieldValues }) => (
-              <FormItem>
-                <FormLabel htmlFor='recipeName'>Name</FormLabel>
-                <FormControl>
-                  <div className='items-center gap-4'>
-                    <Input
-                      {...field}
-                      id='recipeName'
-                      className='text-base'
-                      placeholder='The best recipe in the world'
-                    />
-                  </div>
-                </FormControl>
-              </FormItem>
-            )}
+          <label className='source-option' htmlFor='website'>
+            <RadioGroupItem value='website' id='website' />
+            <IconLink size={18} aria-hidden='true' />
+            <span>A website</span>
+          </label>
+          <label className='source-option' htmlFor='book'>
+            <RadioGroupItem value='book' id='book' />
+            <IconBook2 size={18} aria-hidden='true' />
+            <span>A cookbook</span>
+          </label>
+        </RadioGroup>
+      </fieldset>
+      {source === 'website' ? (
+        <div className='form-field' key='website'>
+          <label htmlFor='recipeLink'>Recipe link</label>
+          <Input
+            id='recipeLink'
+            type='url'
+            inputMode='url'
+            placeholder='https://…'
+            maxLength={2048}
+            aria-invalid={!!errors.recipeLink}
+            aria-describedby={errors.recipeLink ? 'link-error' : 'link-hint'}
+            {...register('recipeLink', {
+              validate: (value) => {
+                if (source !== 'website') return true
+                try {
+                  return (
+                    ['http:', 'https:'].includes(
+                      new URL(value.trim()).protocol
+                    ) || 'Use a full http or https website link.'
+                  )
+                } catch {
+                  return 'Use a full http or https website link.'
+                }
+              }
+            })}
           />
-          <RadioGroup
-            defaultValue='website'
-            value={selectedValue}
-            onValueChange={handleChange}
-          >
-            <div className='flex items-center space-x-2'>
-              <RadioGroupItem value='website' id='website' />
-              <Label htmlFor='website'>Website</Label>
-            </div>
-            <div className='flex items-center space-x-2'>
-              <RadioGroupItem value='book' id='book' />
-              <Label htmlFor='book'>Book</Label>
-            </div>
-          </RadioGroup>
-          {selectedValue === 'website' ? (
-            <FormField
-              control={form.control}
-              name='recipeLink'
-              render={({ field }: { field: FieldValues }) => (
-                <FormItem>
-                  <FormLabel htmlFor='recipeLink'>Link</FormLabel>
-                  <FormControl>
-                    <div className='items-center gap-4'>
-                      <Input
-                        {...field}
-                        id='recipeLink'
-                        className='text-base'
-                        placeholder='Mob, bosh of good food?'
-                      />
-                    </div>
-                  </FormControl>
-                </FormItem>
-              )}
-            />
+          {errors.recipeLink ? (
+            <p className='field-error' id='link-error' role='alert'>
+              {errors.recipeLink.message}
+            </p>
           ) : (
-            <div>
-              <FormField
-                control={form.control}
-                name='recipeBook'
-                render={({ field }: { field: FieldValues }) => (
-                  <FormItem>
-                    <FormLabel htmlFor='recipeBook'>Book</FormLabel>
-                    <FormControl>
-                      <div className='items-center gap-4'>
-                        <Input
-                          {...field}
-                          id='recipeBook'
-                          className='text-base'
-                          placeholder='Which Joe Wicks book?'
-                        />
-                      </div>
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name='recipePageNo'
-                render={({ field }: { field: FieldValues }) => (
-                  <FormItem>
-                    <FormLabel htmlFor='recipePageNo'>Page No</FormLabel>
-                    <FormControl>
-                      <div className='items-center gap-4'>
-                        <Input
-                          {...field}
-                          id='recipePageNo'
-                          className='text-base'
-                          placeholder='207? 145? 567?'
-                        />
-                      </div>
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-            </div>
+            <p className='field-hint' id='link-hint'>
+              Paste the link to the original recipe.
+            </p>
           )}
-          <Button type='submit' disabled={save.isPending}>
-            Update Recipe
-          </Button>
-        </form>
-      </Form>
-    </div>
+        </div>
+      ) : (
+        <div className='cookbook-fields' key='book'>
+          <div className='form-field'>
+            <label htmlFor='recipeBook'>Cookbook title</label>
+            <Input
+              id='recipeBook'
+              placeholder='e.g. The Green Roasting Tin'
+              maxLength={300}
+              aria-invalid={!!errors.recipeBook}
+              aria-describedby={errors.recipeBook ? 'book-error' : undefined}
+              {...register('recipeBook', {
+                validate: (value) =>
+                  source !== 'book' ||
+                  !!value.trim() ||
+                  'Add the name of your cookbook.'
+              })}
+            />
+            {errors.recipeBook && (
+              <p className='field-error' id='book-error' role='alert'>
+                {errors.recipeBook.message}
+              </p>
+            )}
+          </div>
+          <div className='form-field'>
+            <label htmlFor='recipePageNo'>
+              Page <span className='optional-label'>(optional)</span>
+            </label>
+            <Input
+              id='recipePageNo'
+              placeholder='e.g. 42'
+              maxLength={50}
+              {...register('recipePageNo')}
+            />
+          </div>
+        </div>
+      )}
+      {error && (
+        <p role='alert' className='form-error'>
+          {error}
+        </p>
+      )}
+      <div className='recipe-form-footer'>
+        <p>One more good thing in your collection.</p>
+        <Button type='submit' disabled={save.isPending}>
+          <IconPlus size={16} className='mr-2' />
+          {save.isPending ? 'Saving recipe…' : 'Save recipe'}
+        </Button>
+      </div>
+    </form>
   )
 }

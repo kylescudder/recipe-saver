@@ -30,7 +30,7 @@ export default function AccountProfile({
   })
   return (
     <form
-      className='flex flex-col gap-4'
+      className='profile-form'
       onSubmit={(event) => {
         event.preventDefault()
         save.mutate({ name, username, bio, image: user.image })
@@ -61,7 +61,7 @@ export default function AccountProfile({
         onChange={(event) => setBio(event.target.value)}
       />
       <Button type='submit' disabled={save.isPending}>
-        {btnTitle}
+        {save.isPending ? 'Saving profile…' : btnTitle}
       </Button>
     </form>
   )

@@ -28,6 +28,35 @@ uses a **disposable** PostgreSQL service with trust authentication, creates isol
 owner/runtime roles and databases, and removes them afterward. Do not point this
 at Herman's shared production administrator connection.
 
+## Browser tests
+
+`bun run test:e2e` runs the Playwright journeys against a running local frontend
+and API. It covers website and cookbook saves, validation, reload persistence,
+search, archive, sorting, pagination, column visibility, appearance, keyboard
+focus, signed-out access and onboarding at desktop and mobile widths.
+
+Use the existing Clerk **development** instance and a dedicated test login. Set
+`E2E_USERNAME` and `E2E_PASSWORD` privately in the environment, plus
+`E2E_DATABASE_URL` for the same disposable local database used by the API. Its
+database name must start with `recipe_e2e` or `recipe_redesign`. Tests delete local
+profiles and recipes to exercise onboarding and empty states. They do not create
+Clerk accounts. `E2E_BASE_URL` defaults to `http://localhost:5174`; set `APP_ORIGIN`
+to the same address when starting the API.
+
+Global setup validates the disposable PostgreSQL URL before launching a browser
+or signing in. The setup guard tests run as part of `bun run test`, or standalone
+without a database or login using `bun test tests/e2e-setup.test.ts`.
+
+```sh
+bunx --no-install playwright install chromium
+bun run test:e2e
+```
+
+Reports and screenshots are written under ignored `state/design-overhaul/`.
+Login is excluded from screenshots and traces; the saved browser session is
+private and ignored. Network-failure tests deliberately interrupt individual RPC
+requests; successful saves and reloads use the real API and PostgreSQL.
+
 ## Herman production
 
 See [deploy/README.md](deploy/README.md) for the private container, database,

@@ -4,7 +4,9 @@ export default function Logout() {
   const { isSignedIn } = useAuth()
   return isSignedIn ? (
     <SignOutButton>
-      <Button variant='ghost'>Logout</Button>
+      <Button variant='ghost' className='logout-button'>
+        Sign out
+      </Button>
     </SignOutButton>
   ) : null
 }

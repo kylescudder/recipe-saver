@@ -27,11 +27,15 @@ import { DataTableViewOptions } from './data-table-column-toggle'
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
+  toolbar?: React.ReactNode
+  emptyState?: React.ReactNode
 }
 
 export function DataTable<TData, TValue>({
   columns,
-  data
+  data,
+  toolbar,
+  emptyState
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -59,18 +63,28 @@ export function DataTable<TData, TValue>({
   })
 
   return (
-    <div>
-      <div className='flex items-center py-4'>
+    <div className='index-table'>
+      <div className='index-toolbar'>
+        {toolbar}
         <DataTableViewOptions table={table} />
       </div>
-      <div className='rounded-md border'>
-        <Table>
+      <div className='index-table-paper'>
+        <Table aria-label='Saved recipes'>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
                   return (
-                    <TableHead key={header.id}>
+                    <TableHead
+                      key={header.id}
+                      aria-sort={
+                        header.column.getIsSorted() === 'asc'
+                          ? 'ascending'
+                          : header.column.getIsSorted() === 'desc'
+                            ? 'descending'
+                            : undefined
+                      }
+                    >
                       {header.isPlaceholder
                         ? null
                         : flexRender(
@@ -85,11 +99,10 @@ export function DataTable<TData, TValue>({
           </TableHeader>
           <TableBody>
             {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row, rowIndex) => (
+              table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && 'selected'}
-                  className='cursor-pointer'
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
@@ -104,10 +117,10 @@ export function DataTable<TData, TValue>({
             ) : (
               <TableRow>
                 <TableCell
-                  colSpan={columns.length}
+                  colSpan={table.getVisibleLeafColumns().length}
                   className='h-24 text-center'
                 >
-                  No results.
+                  {emptyState ?? 'No results.'}
                 </TableCell>
               </TableRow>
             )}

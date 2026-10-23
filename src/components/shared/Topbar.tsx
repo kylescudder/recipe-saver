@@ -6,20 +6,18 @@ import { ModeToggle } from '../ui/dark-mode-toggle'
 
 export default function Topbar() {
   return (
-    <nav className='flex w-full items-center justify-between px-4 py-2'>
-      <Link to='/' className='flex items-center gap-4'>
+    <nav className='site-header' aria-label='Main navigation'>
+      <Link to='/' className='wordmark'>
         <img
           src='/logo.svg'
           alt=''
-          height={28}
-          width={28}
-          className='shrink-0'
+          height={40}
+          width={40}
+          className='h-10 w-10 shrink-0 max-md:h-[33px] max-md:w-[33px]'
         />
-        <p className='text-light-1 max-xs:hidden text-2xl leading-6 font-bold'>
-          Recipe Saver
-        </p>
+        <span>Recipe Saver</span>
       </Link>
-      <div className='flex items-center gap-4'>
+      <div className='header-actions'>
         <ModeToggle />
         <Logout />
       </div>
