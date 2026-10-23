@@ -731,6 +731,7 @@
   box-shadow: none;
   background: transparent;
   border-radius: 0;
+  overflow: visible;
 }
 .auth-card {
   box-shadow: none;
