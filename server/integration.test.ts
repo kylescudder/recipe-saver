@@ -130,6 +130,9 @@ test('owner migrations are repeatable; runtime cannot perform DDL or enter anoth
   expect(
     (await runtime`SELECT count(*)::int AS rows FROM recipes`)[0].rows
   ).toBeGreaterThan(0)
+  expect(
+    (await runtime`SELECT to_regclass('users') AS name`)[0].name
+  ).toBeNull()
   await denied(runtime.unsafe('CREATE TABLE forbidden(id int)'))
   await denied(runtime.unsafe('CREATE SCHEMA forbidden'))
   await denied(runtime.unsafe('CREATE ROLE forbidden'))
