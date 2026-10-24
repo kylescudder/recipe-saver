@@ -5,6 +5,7 @@ const config = {
   semi: false,
   singleQuote: true,
   jsxSingleQuote: true,
+  tailwindPreserveWhitespace: true,
   plugins: ['prettier-plugin-tailwindcss']
 }
 
