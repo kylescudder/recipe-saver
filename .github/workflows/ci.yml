@@ -37,6 +37,6 @@ jobs:
       - name: Verify application deployment hooks
         run: python3 -B -m unittest discover -s deploy -p 'test_*.py' -v
       - name: Verify webhook authentication and queue limits
-        run: docker run --rm -v "$PWD/deploy/receiver:/app:ro" -w /app node:24-alpine@sha256:44fce696f38ba8c987c4db89954051000bbd05ffd8d8659ba15ed4a8602e937f node --test server.test.mjs
+        run: docker run --rm -v "$PWD/deploy/receiver:/app:ro" -w /app node:24-alpine@sha256:06d7adf3e0ef61a13f1d28682726366f97a15aa1888c934d3ecec86c33918b53 node --test server.test.mjs
       - name: Build production runtime
         run: docker build --build-arg RECIPE_SAVER_REVISION="$GITHUB_SHA" -t recipe-saver:ci .
