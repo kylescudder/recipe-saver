@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { database } from '../server/db'
 const base = 'http://127.0.0.1:3000'
-const health = await fetch(base + '/api/health')
+const health = await fetch(base + '/healthz')
 assert.equal(health.status, 200)
 assert.equal(
   health.headers.get('x-recipe-saver-revision'),

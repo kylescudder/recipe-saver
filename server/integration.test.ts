@@ -187,7 +187,8 @@ test('HTTP routing, error redaction, bearer auth boundary, cache headers, assets
   // Database error details must never leak into the RPC response.
   expect(failed.status).toBe(500)
   expect(await failed.text()).not.toContain('recipes_secret_detail')
-  expect((await app(new Request(origin + '/api/health'))).status).toBe(200)
+  for (const path of ['/healthz', '/api/health'])
+    expect((await app(new Request(origin + path))).status).toBe(200)
   for (const path of ['/', '/recipes', '/sign-in', '/sign-up'])
     expect((await app(new Request(origin + path))).status).toBe(200)
   for (const path of [
