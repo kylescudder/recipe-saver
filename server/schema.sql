@@ -1,3 +1,5 @@
+-- Onboarding profiles were removed; the previous release no longer reads users.
+DROP TABLE IF EXISTS users;
 CREATE TABLE IF NOT EXISTS recipes (
   id text PRIMARY KEY,
   recipe_name text NOT NULL,
