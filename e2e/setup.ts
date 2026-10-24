@@ -27,7 +27,15 @@ export default async function setup(config: FullConfig) {
     await page.waitForURL((url) => !url.pathname.includes('sign-in'), {
       timeout: 30000
     })
-    if (new URL(page.url()).pathname === '/onboarding') {
+    // A fresh account is redirected to /onboarding after its profile loads, so
+    // wait for whichever screen appears rather than reading the URL once.
+    const onboarding = page.getByRole('heading', {
+      name: 'Onboarding',
+      exact: true
+    })
+    const recipeIndex = page.getByRole('heading', { name: 'Your recipe index' })
+    await expect(onboarding.or(recipeIndex)).toBeVisible({ timeout: 30000 })
+    if (await onboarding.isVisible()) {
       await page.getByLabel('Name', { exact: true }).fill('Test Cook')
       await page.getByLabel('Username', { exact: true }).fill('test-cook')
       await page
@@ -35,9 +43,7 @@ export default async function setup(config: FullConfig) {
         .fill('Local verification profile')
       await page.getByRole('button', { name: 'Continue', exact: true }).click()
     }
-    await expect(
-      page.getByRole('heading', { name: 'Your recipe index' })
-    ).toBeVisible()
+    await expect(recipeIndex).toBeVisible()
     await page
       .context()
       .storageState({ path: 'state/design-overhaul/auth.json' })

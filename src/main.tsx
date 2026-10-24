@@ -97,9 +97,8 @@ function Onboarding() {
   return (
     <>
       <div className='page-heading'>
-        <p className='page-context'>Before we begin</p>
-        <h1>Make yourself at home.</h1>
-        <p>A few details, then your household recipe book is ready.</p>
+        <h1>Onboarding</h1>
+        <p>Complete your profile now to use Recipe Saver.</p>
       </div>
       <AccountProfile
         user={
