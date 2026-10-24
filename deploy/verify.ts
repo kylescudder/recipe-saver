@@ -8,7 +8,7 @@ assert.equal(
   process.env.RECIPE_SAVER_REVISION
 )
 assert.equal((await health.json()).ok, true)
-for (const path of ['/', '/recipes', '/onboarding', '/sign-in', '/sign-up']) {
+for (const path of ['/', '/recipes', '/sign-in', '/sign-up']) {
   const response = await fetch(base + path)
   assert.equal(response.status, 200)
   const html = await response.text()
@@ -47,7 +47,6 @@ try {
     await sql`SELECT has_schema_privilege(current_user, 'public', 'CREATE') AS can_create`
   assert.equal(grants.can_create, false)
   await sql`SELECT id FROM recipes LIMIT 1`
-  await sql`SELECT id FROM users LIMIT 1`
 } finally {
   await sql.end()
 }

@@ -3,7 +3,6 @@ import { createRoot } from 'react-dom/client'
 import {
   ClerkProvider,
   useAuth,
-  useUser,
   SignIn,
   SignUp,
   RedirectToSignIn
@@ -15,12 +14,10 @@ import {
   createRoute,
   createRouter,
   RouterProvider,
-  Outlet,
-  Navigate
+  Outlet
 } from '@tanstack/react-router'
 import { trpc } from './lib/trpc'
 import RecipeList from './components/RecipeList'
-import AccountProfile from './components/forms/AccountProfile'
 import Topbar from './components/shared/Topbar'
 import RecipeBook from './components/RecipeBook'
 import { ThemeProvider } from './components/theme-provider'
@@ -66,58 +63,6 @@ function Authenticated({ children }: { children: React.ReactNode }) {
   if (!isLoaded) return <OpeningBook />
   return isSignedIn ? children : <RedirectToSignIn />
 }
-function Recipes() {
-  const profile = trpc.profile.me.useQuery()
-  if (profile.isPending) return <p role='status'>Loading profile…</p>
-  if (profile.isError)
-    return (
-      <p role='alert'>
-        Could not load your profile.{' '}
-        <button onClick={() => profile.refetch()}>Retry</button>
-      </p>
-    )
-  return profile.data?.onboarded ? (
-    <RecipeList />
-  ) : (
-    <Navigate to='/onboarding' />
-  )
-}
-function Onboarding() {
-  const { user } = useUser()
-  const profile = trpc.profile.me.useQuery()
-  if (profile.isPending || !user) return <p role='status'>Loading profile…</p>
-  if (profile.isError)
-    return (
-      <p role='alert'>
-        Could not load your profile.{' '}
-        <button onClick={() => profile.refetch()}>Retry</button>
-      </p>
-    )
-  if (profile.data?.onboarded) return <Navigate to='/' />
-  return (
-    <>
-      <div className='page-heading'>
-        <p className='page-context'>Before we begin</p>
-        <h1>Make yourself at home.</h1>
-        <p>A few details, then your household recipe book is ready.</p>
-      </div>
-      <AccountProfile
-        user={
-          profile.data ?? {
-            _id: '',
-            clerkId: user.id,
-            username: user.primaryEmailAddress?.emailAddress ?? '',
-            name: user.fullName ?? '',
-            bio: '',
-            image: user.imageUrl,
-            onboarded: false
-          }
-        }
-        btnTitle='Continue'
-      />
-    </>
-  )
-}
 const root = createRootRoute({
   component: () => (
     <>
@@ -149,7 +94,7 @@ const index = createRoute({
   path: '/',
   component: () => (
     <Authenticated>
-      <Recipes />
+      <RecipeList />
     </Authenticated>
   )
 })
@@ -158,16 +103,7 @@ const recipes = createRoute({
   path: '/recipes',
   component: () => (
     <Authenticated>
-      <Recipes />
-    </Authenticated>
-  )
-})
-const onboarding = createRoute({
-  getParentRoute: () => root,
-  path: '/onboarding',
-  component: () => (
-    <Authenticated>
-      <Onboarding />
+      <RecipeList />
     </Authenticated>
   )
 })
@@ -210,7 +146,7 @@ const signUp = createRoute({
   )
 })
 const router = createRouter({
-  routeTree: root.addChildren([index, recipes, onboarding, signIn, signUp])
+  routeTree: root.addChildren([index, recipes, signIn, signUp])
 })
 declare module '@tanstack/react-router' {
   interface Register {
@@ -221,7 +157,7 @@ declare module '@tanstack/react-router' {
 function App() {
   const { isLoaded, userId } = useAuth()
   if (!isLoaded) return <OpeningBook />
-  // A fresh provider per identity isolates cached household/profile data without
+  // A fresh provider per identity isolates cached household data without
   // cancelling the new identity's active queries during its first render.
   return <SessionApp key={userId ?? 'signed-out'} />
 }

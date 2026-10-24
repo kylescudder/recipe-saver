@@ -27,14 +27,6 @@ export default async function setup(config: FullConfig) {
     await page.waitForURL((url) => !url.pathname.includes('sign-in'), {
       timeout: 30000
     })
-    if (new URL(page.url()).pathname === '/onboarding') {
-      await page.getByLabel('Name', { exact: true }).fill('Test Cook')
-      await page.getByLabel('Username', { exact: true }).fill('test-cook')
-      await page
-        .getByLabel('Bio', { exact: true })
-        .fill('Local verification profile')
-      await page.getByRole('button', { name: 'Continue', exact: true }).click()
-    }
     await expect(
       page.getByRole('heading', { name: 'Your recipe index' })
     ).toBeVisible()

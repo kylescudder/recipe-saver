@@ -37,8 +37,7 @@ Compose limits it to 256 MiB, one CPU, 128 processes and bounded logs, drops all
 capabilities and uses a read-only root filesystem. The API uses four pooled
 Postgres connections.
 
-All recipe RPCs require a verified Clerk session and an onboarded profile; users
-can update only the profile identified by their session. The app uses the
+All recipe RPCs require a verified Clerk session. The app uses the
 production instance of the Recipe Saver Clerk application, served from
 `clerk.recipes.kylescudder.co.uk`. Do not substitute another app's Clerk instance.
 
