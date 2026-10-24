@@ -201,36 +201,6 @@ test('signed-out access redirects to Clerk sign-in', async ({
   await context.close()
 })
 
-test('onboarding saves the profile and opens the collection after reload', async ({
-  page
-}) => {
-  const sql = testDatabase()
-  try {
-    await sql`DELETE FROM users`
-    await page.goto('/')
-    await expect(page).toHaveURL(/onboarding/)
-    await page.getByLabel('Name', { exact: true }).fill('Test Cook')
-    await page.getByLabel('Username', { exact: true }).fill('test-cook')
-    await page
-      .getByLabel('Bio', { exact: true })
-      .fill('Local verification profile')
-    await page.getByRole('button', { name: 'Continue', exact: true }).click()
-    await expect(
-      page.getByRole('heading', { name: 'Your recipe index' })
-    ).toBeVisible()
-    await page.reload()
-    await expect(
-      page.getByRole('heading', { name: 'Your recipe index' })
-    ).toBeVisible()
-    expect((await sql`SELECT name, onboarded FROM users`)[0]).toMatchObject({
-      name: 'Test Cook',
-      onboarded: true
-    })
-  } finally {
-    await sql.end()
-  }
-})
-
 test('failed save and archive keep the recipe available to retry', async ({
   page
 }) => {

@@ -584,9 +584,7 @@
   font-size: 12px;
   font-weight: 550;
 }
-.recipe-form input,
-.profile-form input,
-.profile-form textarea {
+.recipe-form input {
   background: hsl(var(--card) / 0.5);
   font-size: 14px;
   height: 43px;
@@ -700,23 +698,6 @@
 .page-heading a {
   text-decoration: underline;
   text-underline-offset: 4px;
-}
-.profile-form {
-  display: flex;
-  flex-direction: column;
-  gap: 9px;
-  max-width: 440px;
-}
-.profile-form label {
-  font-size: 12px;
-  margin-top: 10px;
-}
-.profile-form textarea {
-  height: 90px;
-  resize: vertical;
-}
-.profile-form > button {
-  margin-top: 20px;
 }
 .auth-page {
   padding-top: 25px;

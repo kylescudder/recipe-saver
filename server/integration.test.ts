@@ -1,7 +1,7 @@
 import { beforeAll, afterAll, test, expect } from 'bun:test'
 import { randomUUID } from 'node:crypto'
 import postgres from 'postgres'
-import { database, migrate } from './db'
+import { database, migrate, type Database } from './db'
 import { appRouter } from './router'
 import { createApp } from './app'
 
@@ -40,7 +40,6 @@ const recipe = {
   recipePageNo: '',
   archive: false
 }
-const profile = { name: 'Test Cook', username: 'test-cook', bio: '', image: '' }
 async function denied(operation: PromiseLike<unknown>) {
   await expect(Promise.resolve(operation)).rejects.toMatchObject({
     code: '42501'
@@ -76,11 +75,9 @@ afterAll(async () => {
     if (created.includes(role)) await admin.unsafe(`DROP ROLE "${role}"`)
   await admin.end({ timeout: 1 })
 })
-test('all profile and recipe procedures reject unauthenticated access', async () => {
+test('all recipe procedures reject unauthenticated access', async () => {
   const anonymous = caller(null)
   for (const operation of [
-    () => anonymous.profile.me(),
-    () => anonymous.profile.save(profile),
     () => anonymous.recipes.list(),
     () => anonymous.recipes.save(recipe),
     () => anonymous.recipes.archive('missing')
@@ -88,25 +85,13 @@ test('all profile and recipe procedures reject unauthenticated access', async ()
     await expect(operation()).rejects.toMatchObject({ code: 'UNAUTHORIZED' })
   }
 })
-test('new users can onboard; identity cannot be supplied by the client', async () => {
-  const cook = caller('clerk-cook')
-  expect(await cook.profile.me()).toBeNull()
-  await expect(cook.recipes.list()).rejects.toMatchObject({ code: 'FORBIDDEN' })
-  await cook.profile.save({
-    ...profile,
-    clerkId: 'other-user'
-  } as typeof profile)
-  expect((await cook.profile.me())?.clerkId).toBe('clerk-cook')
-  expect(await caller('other-user').profile.me()).toBeNull()
+test('any signed-in user reaches the shared collection immediately', async () => {
+  expect(await caller('clerk-new').recipes.list()).toHaveLength(0)
 })
 test('shared household create/update/list/archive, stable IDs and source validation', async () => {
   const cook = caller('clerk-cook')
   const saved = await cook.recipes.save(recipe)
   expect(saved._id).toBeTruthy()
-  await caller('clerk-second').profile.save({
-    ...profile,
-    username: 'second-cook'
-  })
   expect(
     (await caller('clerk-second').recipes.list()).some(
       (row) => row._id === saved._id
@@ -142,7 +127,9 @@ test('shared household create/update/list/archive, stable IDs and source validat
 })
 test('owner migrations are repeatable; runtime cannot perform DDL or enter another database', async () => {
   await migrate(owner)
-  expect((await caller('clerk-cook').profile.me())?.onboarded).toBe(true)
+  expect(
+    (await runtime`SELECT count(*)::int AS rows FROM recipes`)[0].rows
+  ).toBeGreaterThan(0)
   await denied(runtime.unsafe('CREATE TABLE forbidden(id int)'))
   await denied(runtime.unsafe('CREATE SCHEMA forbidden'))
   await denied(runtime.unsafe('CREATE ROLE forbidden'))
@@ -184,22 +171,27 @@ test('HTTP routing, error redaction, bearer auth boundary, cache headers, assets
       )
     ).status
   ).toBe(403)
-  const conflict = await app(
-    new Request(origin + '/api/trpc/profile.save', {
-      method: 'POST',
-      headers: {
-        authorization: 'Bearer test-session',
-        'content-type': 'application/json'
-      },
-      body: JSON.stringify({ ...profile, username: 'second-cook' })
-    })
-  )
-  // Database constraint details must never leak into the RPC response.
-  expect(conflict.status).toBe(500)
-  expect(await conflict.text()).not.toContain('users_username_key')
+  const failing = createApp({
+    sql: (() =>
+      Promise.reject(
+        new Error('relation "recipes_secret_detail" does not exist')
+      )) as unknown as Database,
+    origin,
+    revision: 'a'.repeat(40),
+    authenticate: async () => 'clerk-cook'
+  })
+  const failed = await failing(new Request(origin + '/api/trpc/recipes.list'))
+  // Database error details must never leak into the RPC response.
+  expect(failed.status).toBe(500)
+  expect(await failed.text()).not.toContain('recipes_secret_detail')
   expect((await app(new Request(origin + '/api/health'))).status).toBe(200)
-  for (const path of ['/', '/recipes', '/onboarding', '/sign-in', '/sign-up'])
+  for (const path of ['/', '/recipes', '/sign-in', '/sign-up'])
     expect((await app(new Request(origin + path))).status).toBe(200)
-  for (const path of ['/api/missing', '/assets/missing.js', '/missing'])
+  for (const path of [
+    '/api/missing',
+    '/assets/missing.js',
+    '/missing',
+    '/onboarding'
+  ])
     expect((await app(new Request(origin + path))).status).toBe(404)
 })

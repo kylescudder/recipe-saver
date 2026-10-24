@@ -56,9 +56,7 @@ export function createApp({
           headers: { 'Content-Type': file.type }
         })
       else if (
-        ['/', '/recipes', '/onboarding', '/sign-in', '/sign-up'].includes(
-          url.pathname
-        ) ||
+        ['/', '/recipes', '/sign-in', '/sign-up'].includes(url.pathname) ||
         /^\/sign-(in|up)\//.test(url.pathname)
       )
         response = new Response(

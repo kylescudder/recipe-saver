@@ -1,12 +1,3 @@
-CREATE TABLE IF NOT EXISTS users (
-  id text PRIMARY KEY,
-  clerk_id text NOT NULL UNIQUE,
-  username text NOT NULL UNIQUE,
-  name text NOT NULL DEFAULT '',
-  bio text NOT NULL DEFAULT '',
-  image text NOT NULL DEFAULT '',
-  onboarded boolean NOT NULL DEFAULT false
-);
 CREATE TABLE IF NOT EXISTS recipes (
   id text PRIMARY KEY,
   recipe_name text NOT NULL,
