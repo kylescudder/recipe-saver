@@ -140,7 +140,7 @@ jobs:
       cancel-in-progress: false
     env:
       DEPLOY_URL: https://deploy-recipe-saver.kylescudder.co.uk/hooks/recipe-saver
-      HEALTH_URL: ${{ vars.RECIPE_SAVER_BASE_URL }}/api/health
+      HEALTH_URL: ${{ vars.RECIPE_SAVER_BASE_URL }}/healthz
     steps:
       - name: Check deploy endpoint protection
         env:
