@@ -26,17 +26,17 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Typecheck and build with the frozen lockfile
+      - name: Typecheck and build
         run: docker build --target build -t recipe-saver:checks .
       - name: Check dependency advisories
         run: docker run --rm recipe-saver:checks bun audit --audit-level high
-      - name: Verify formatting
+      - name: Check formatting
         run: docker run --rm recipe-saver:checks bun run format:check
-      - name: Verify owner/runtime isolation, RPC authorization and import preservation
+      - name: Test
         run: docker run --rm --network host -e TEST_DATABASE_URL=postgres://postgres@127.0.0.1:5432/postgres recipe-saver:checks bun run test
-      - name: Verify application deployment hooks
+      - name: Test deployment hooks
         run: python3 -B -m unittest discover -s deploy -p 'test_*.py' -v
-      - name: Verify webhook authentication and queue limits
+      - name: Test webhook receiver
         run: docker run --rm -v "$PWD/deploy/receiver:/app:ro" -w /app node:24-alpine@sha256:06d7adf3e0ef61a13f1d28682726366f97a15aa1888c934d3ecec86c33918b53 node --test server.test.mjs
-      - name: Build production runtime
+      - name: Build production image
         run: docker build --build-arg RECIPE_SAVER_REVISION="$GITHUB_SHA" -t recipe-saver:ci .
