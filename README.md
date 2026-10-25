@@ -2,7 +2,7 @@
 
 Save website recipes and cookbook page references in a shared household collection.
 
-React/Vite runs with TanStack Router, Query and Table. A typed tRPC API runs on Bun,
+A TanStack Start app (Router, Query and Table) with a typed tRPC API, served by Bun.
 Clerk authenticates every recipe procedure, and PostgreSQL persists recipes
 through [Drizzle](https://orm.drizzle.team).
 Recipe access requires a Clerk session. The household collection is shared between
@@ -12,21 +12,19 @@ signed-in users.
 
 Use Bun 1.4.4 and a local PostgreSQL database. Copy `.env.example` to `.env`, set
 `APP_ORIGIN=http://localhost:5173`, use the existing Recipe Saver Clerk instance,
-and use a local database URL. Set the same publishable key in
-`CLERK_PUBLISHABLE_KEY` and `VITE_CLERK_PUBLISHABLE_KEY`. Never commit `.env`.
+and use a local database URL. Never commit `.env`.
 
 ```sh
 bun install --frozen-lockfile
 bun run db:migrate # local development owner connection only
-bun run dev:server
-# In a second terminal:
 bun run dev
 ```
 
-The schema is in `server/schema.ts`; run `bun run db:generate` after changing it
+The schema is in `src/server/schema.ts`; run `bun run db:generate` after changing it
 to add a migration to `drizzle/`.
 
 `bun run typecheck`, `bun run build` and `bun run format:check` validate the app.
+Run `bun run build` before `bun run test`: the HTTP test serves pages from the build.
 `TEST_DATABASE_URL=postgres://postgres@localhost:5432/postgres bun run test`
 uses a **disposable** PostgreSQL service with trust authentication, creates isolated
 owner/runtime roles and databases, and removes them afterward. Do not point this
@@ -43,8 +41,8 @@ Use the existing Clerk **development** instance and a dedicated test login. Set
 `E2E_USERNAME` and `E2E_PASSWORD` privately in the environment, plus
 `E2E_DATABASE_URL` for the same disposable local database used by the API. Its
 database name must start with `recipe_e2e` or `recipe_redesign`. Tests delete local
-recipes to exercise empty states. They do not create Clerk accounts. `E2E_BASE_URL` defaults to `http://localhost:5174`; set `APP_ORIGIN`
-to the same address when starting the API.
+recipes to exercise empty states. They do not create Clerk accounts. `E2E_BASE_URL` defaults to `http://localhost:5174`; start the app there
+(`bun run dev --port 5174`) with `APP_ORIGIN` set to the same address.
 
 Global setup validates the disposable PostgreSQL URL before launching a browser
 or signing in. The setup guard tests run as part of `bun run test`, or standalone

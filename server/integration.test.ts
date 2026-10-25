@@ -1,10 +1,12 @@
 import { beforeAll, afterAll, test, expect } from 'bun:test'
 import { randomUUID } from 'node:crypto'
 import postgres from 'postgres'
-import { database, migrate, orm, type Database } from './db'
-import { appRouter } from './router'
+import { existsSync } from 'node:fs'
+import { database, migrate, orm, type Database } from '../src/server/db'
+import { appRouter } from '../src/server/router'
+import { createTrpcHandler } from '../src/server/trpc-handler'
 import { createApp } from './app'
-import { createHealthCheck } from './health'
+import { createHealthCheck } from '../src/server/health'
 import { stallHealthQueries } from '../tests/postgres-proxy'
 
 if (!process.env.TEST_DATABASE_URL)
@@ -151,15 +153,30 @@ test('owner migrations are repeatable; runtime cannot perform DDL, see the journ
 })
 test('HTTP routing, error redaction, bearer auth boundary, cache headers, assets and health', async () => {
   const origin = 'https://recipes.example'
+  // Pages come from the real Start build; tRPC gets a test identity instead of Clerk.
+  if (!existsSync('dist/server/server.js'))
+    throw new Error('Run bun run build before this test')
+  process.env.APP_ORIGIN = origin
+  process.env.DATABASE_URL = databaseUrl(runtimeName)
+  process.env.CLERK_PUBLISHABLE_KEY = 'pk_live_Y2xlcmsuZXhhbXBsZS5jb20k'
+  process.env.CLERK_SECRET_KEY = 'sk_live_test'
+  const { default: start } = (await import(
+    '../dist/server/server.js' as string
+  )) as { default: { fetch: (request: Request) => Promise<Response> } }
+  const pages = (request: Request) => start.fetch(request)
+  const trpc = createTrpcHandler(orm(runtime), async (req) =>
+    req.headers.get('authorization') === 'Bearer test-session'
+      ? 'clerk-cook'
+      : null
+  )
   const app = createApp({
-    sql: runtime,
+    app: (request) =>
+      new URL(request.url).pathname.startsWith('/api/trpc/')
+        ? trpc(request)
+        : pages(request),
     checkHealth: createHealthCheck(databaseUrl(runtimeName)),
     origin,
-    revision: 'a'.repeat(40),
-    authenticate: async (req) =>
-      req.headers.get('authorization') === 'Bearer test-session'
-        ? 'clerk-cook'
-        : null
+    revision: 'a'.repeat(40)
   })
   for (const authorization of [undefined, 'Bearer forged']) {
     const response = await app(
@@ -188,19 +205,23 @@ test('HTTP routing, error redaction, bearer auth boundary, cache headers, assets
   ).toBe(403)
   const failing = createApp({
     checkHealth: async () => {},
-    // Enough of a postgres.js client for Drizzle; every query fails like a real one.
-    sql: {
-      options: { parsers: {}, serializers: {} },
-      unsafe: () => {
-        const failure = Promise.reject(
-          new Error('relation "recipes_secret_detail" does not exist')
-        )
-        return Object.assign(failure, { values: () => failure })
-      }
-    } as unknown as Database,
     origin,
     revision: 'a'.repeat(40),
-    authenticate: async () => 'clerk-cook'
+    app: createTrpcHandler(
+      orm(
+        // Enough of a postgres.js client for Drizzle; every query fails like a real one.
+        {
+          options: { parsers: {}, serializers: {} },
+          unsafe: () => {
+            const failure = Promise.reject(
+              new Error('relation "recipes_secret_detail" does not exist')
+            )
+            return Object.assign(failure, { values: () => failure })
+          }
+        } as unknown as Database
+      ),
+      async () => 'clerk-cook'
+    )
   })
   const failed = await failing(new Request(origin + '/api/trpc/recipes.list'))
   // Database error details must never leak into the RPC response.
@@ -227,9 +248,8 @@ test('stalled health probes do not exhaust the shared pool and recover', async (
   const proxy = await stallHealthQueries(url.toString())
   const sql = database(proxy.url)
   const app = createApp({
-    sql,
+    app: createTrpcHandler(orm(sql), async () => null),
     checkHealth: createHealthCheck(proxy.url),
-    authenticate: async () => null,
     origin: 'http://localhost',
     revision: 'probe-test'
   })
