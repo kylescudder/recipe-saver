@@ -1,7 +1,7 @@
 import { beforeAll, afterAll, test, expect } from 'bun:test'
 import { randomUUID } from 'node:crypto'
 import postgres from 'postgres'
-import { database, migrate, type Database } from './db'
+import { database, migrate, orm, type Database } from './db'
 import { appRouter } from './router'
 import { createApp } from './app'
 import { createHealthCheck } from './health'
@@ -36,7 +36,7 @@ function client(user: string, db = name) {
   return sql
 }
 const caller = (userId: string | null) =>
-  appRouter.createCaller({ sql: runtime, userId })
+  appRouter.createCaller({ db: orm(runtime), userId })
 const recipe = {
   _id: '',
   recipeName: 'Test pasta',
@@ -130,8 +130,14 @@ test('shared household create/update/list/archive, stable IDs and source validat
     cook.recipes.save({ ...recipe, _id: 'missing' })
   ).rejects.toMatchObject({ code: 'NOT_FOUND' })
 })
-test('owner migrations are repeatable; runtime cannot perform DDL or enter another database', async () => {
+test('owner migrations are repeatable; runtime cannot perform DDL, see the journal or enter another database', async () => {
   await migrate(owner)
+  expect(
+    (
+      await owner`SELECT count(*)::int AS applied FROM drizzle.__drizzle_migrations`
+    )[0].applied
+  ).toBe(1)
+  await denied(runtime`SELECT hash FROM drizzle.__drizzle_migrations`)
   expect(
     (await runtime`SELECT count(*)::int AS rows FROM recipes`)[0].rows
   ).toBeGreaterThan(0)
@@ -182,10 +188,16 @@ test('HTTP routing, error redaction, bearer auth boundary, cache headers, assets
   ).toBe(403)
   const failing = createApp({
     checkHealth: async () => {},
-    sql: (() =>
-      Promise.reject(
-        new Error('relation "recipes_secret_detail" does not exist')
-      )) as unknown as Database,
+    // Enough of a postgres.js client for Drizzle; every query fails like a real one.
+    sql: {
+      options: { parsers: {}, serializers: {} },
+      unsafe: () => {
+        const failure = Promise.reject(
+          new Error('relation "recipes_secret_detail" does not exist')
+        )
+        return Object.assign(failure, { values: () => failure })
+      }
+    } as unknown as Database,
     origin,
     revision: 'a'.repeat(40),
     authenticate: async () => 'clerk-cook'

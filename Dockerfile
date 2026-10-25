@@ -22,6 +22,7 @@ LABEL org.opencontainers.image.source="https://github.com/kylescudder/recipe-sav
 ENV NODE_ENV=production PORT=3000 RECIPE_SAVER_REVISION=$RECIPE_SAVER_REVISION
 COPY --from=production-dependencies --chown=bun:bun /app/node_modules ./node_modules
 COPY --from=build --chown=bun:bun /app/dist ./dist
+COPY --chown=bun:bun drizzle ./drizzle
 COPY --chown=bun:bun server ./server
 COPY --chown=bun:bun src/lib/models ./src/lib/models
 COPY --chown=bun:bun deploy/healthcheck.ts deploy/verify.ts deploy/database.ts ./deploy/

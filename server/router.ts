@@ -1,9 +1,18 @@
 import { initTRPC, TRPCError } from '@trpc/server'
 import { randomUUID } from 'node:crypto'
+import { asc, eq, sql } from 'drizzle-orm'
 import { z } from 'zod'
-import type { Database } from './db'
-import type { IRecipe } from '../src/lib/models/recipe'
-export type Context = { sql: Database; userId: string | null }
+import type { Orm } from './db'
+import { recipes } from './schema'
+export type Context = { db: Orm; userId: string | null }
+const recipeColumns = {
+  _id: recipes.id,
+  recipeName: recipes.recipeName,
+  recipeLink: recipes.recipeLink,
+  recipeBook: recipes.recipeBook,
+  recipePageNo: recipes.recipePageNo,
+  archive: recipes.archive
+}
 const t = initTRPC.context<Context>().create({
   errorFormatter({ shape, error }) {
     return error.code === 'INTERNAL_SERVER_ERROR'
@@ -45,27 +54,41 @@ export const appRouter = t.router({
   // The original application is a shared household recipe collection. All
   // signed-in Clerk users see it; identity always comes from the session.
   recipes: t.router({
-    list: authenticated.query(
-      ({ ctx }) =>
-        ctx.sql<
-          IRecipe[]
-        >`SELECT id AS "_id", recipe_name AS "recipeName", recipe_link AS "recipeLink", recipe_book AS "recipeBook", recipe_page_no AS "recipePageNo", archive FROM recipes WHERE archive = false ORDER BY lower(recipe_name), id`
+    list: authenticated.query(({ ctx }) =>
+      ctx.db
+        .select(recipeColumns)
+        .from(recipes)
+        .where(eq(recipes.archive, false))
+        .orderBy(sql`lower(${recipes.recipeName})`, asc(recipes.id))
     ),
     save: authenticated.input(recipeInput).mutation(async ({ ctx, input }) => {
       const recipeId = input._id || randomUUID()
+      const values = {
+        recipeName: input.recipeName,
+        recipeLink: input.recipeLink,
+        recipeBook: input.recipeBook,
+        recipePageNo: input.recipePageNo,
+        archive: input.archive
+      }
       const rows = input._id
-        ? await ctx.sql<
-            IRecipe[]
-          >`UPDATE recipes SET recipe_name = ${input.recipeName}, recipe_link = ${input.recipeLink}, recipe_book = ${input.recipeBook}, recipe_page_no = ${input.recipePageNo}, archive = ${input.archive} WHERE id = ${recipeId} RETURNING id AS "_id", recipe_name AS "recipeName", recipe_link AS "recipeLink", recipe_book AS "recipeBook", recipe_page_no AS "recipePageNo", archive`
-        : await ctx.sql<
-            IRecipe[]
-          >`INSERT INTO recipes (id, recipe_name, recipe_link, recipe_book, recipe_page_no, archive) VALUES (${recipeId}, ${input.recipeName}, ${input.recipeLink}, ${input.recipeBook}, ${input.recipePageNo}, ${input.archive}) RETURNING id AS "_id", recipe_name AS "recipeName", recipe_link AS "recipeLink", recipe_book AS "recipeBook", recipe_page_no AS "recipePageNo", archive`
+        ? await ctx.db
+            .update(recipes)
+            .set(values)
+            .where(eq(recipes.id, recipeId))
+            .returning(recipeColumns)
+        : await ctx.db
+            .insert(recipes)
+            .values({ id: recipeId, ...values })
+            .returning(recipeColumns)
       if (!rows[0]) throw new TRPCError({ code: 'NOT_FOUND' })
       return rows[0]
     }),
     archive: authenticated.input(id).mutation(async ({ ctx, input }) => {
-      const rows =
-        await ctx.sql`UPDATE recipes SET archive = true WHERE id = ${input} RETURNING id`
+      const rows = await ctx.db
+        .update(recipes)
+        .set({ archive: true })
+        .where(eq(recipes.id, input))
+        .returning({ id: recipes.id })
       if (!rows.length) throw new TRPCError({ code: 'NOT_FOUND' })
       return { ok: true }
     })
