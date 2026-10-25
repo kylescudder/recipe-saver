@@ -1,6 +1,7 @@
 import { createClerkClient } from '@clerk/backend'
 import { database } from './db'
 import { createApp } from './app'
+import { createHealthCheck } from './health'
 for (const name of [
   'DATABASE_URL',
   'CLERK_SECRET_KEY',
@@ -20,6 +21,7 @@ export default {
   port: Number(process.env.PORT ?? 3000),
   fetch: createApp({
     sql,
+    checkHealth: createHealthCheck(process.env.DATABASE_URL!),
     origin,
     revision: process.env.RECIPE_SAVER_REVISION ?? 'unknown',
     authenticate: async (request) => {

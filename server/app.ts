@@ -4,44 +4,28 @@ import type { Database } from './db'
 import { resolve } from 'node:path'
 export function createApp({
   sql,
+  checkHealth,
   authenticate,
   origin,
   revision
 }: {
   sql: Database
+  checkHealth: () => Promise<void>
   authenticate: (request: Request) => Promise<string | null>
   origin: string
   revision: string
 }) {
   const dist = resolve('dist')
-  let healthProbe: Promise<unknown> | undefined
   return async (request: Request): Promise<Response> => {
     const url = new URL(request.url)
     let response: Response
     // /api/health is the pre-standardisation path; remove once nothing calls it.
     if (url.pathname === '/healthz' || url.pathname === '/api/health') {
-      healthProbe ??= sql
-        .begin(async (probe) => {
-          await probe`SET LOCAL statement_timeout = '3s'`
-          await probe`SELECT 1`
-        })
-        .finally(() => {
-          healthProbe = undefined
-        })
-      let timer: ReturnType<typeof setTimeout> | undefined
       try {
-        // Fail before the server's idle timeout drops the request.
-        await Promise.race([
-          healthProbe,
-          new Promise<never>((_, reject) => {
-            timer = setTimeout(() => reject(new Error('timeout')), 3000)
-          })
-        ])
+        await checkHealth()
         response = Response.json({ ok: true, revision })
       } catch {
         response = Response.json({ ok: false }, { status: 503 })
-      } finally {
-        clearTimeout(timer)
       }
     } else if (url.pathname.startsWith('/api/trpc/')) {
       if (

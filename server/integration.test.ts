@@ -4,6 +4,7 @@ import postgres from 'postgres'
 import { database, migrate, type Database } from './db'
 import { appRouter } from './router'
 import { createApp } from './app'
+import { createHealthCheck } from './health'
 import { stallHealthQueries } from '../tests/postgres-proxy'
 
 if (!process.env.TEST_DATABASE_URL)
@@ -22,12 +23,15 @@ const clients: ReturnType<typeof postgres>[] = []
 let owner: ReturnType<typeof postgres>
 let runtime: ReturnType<typeof postgres>
 const created: string[] = []
-function client(user: string, db = name) {
+function databaseUrl(user: string, db = name) {
   const url = new URL(process.env.TEST_DATABASE_URL!)
   url.username = user
   url.password = ''
   url.pathname = '/' + db
-  const sql = database(url.toString())
+  return url.toString()
+}
+function client(user: string, db = name) {
+  const sql = database(databaseUrl(user, db))
   clients.push(sql)
   return sql
 }
@@ -143,6 +147,7 @@ test('HTTP routing, error redaction, bearer auth boundary, cache headers, assets
   const origin = 'https://recipes.example'
   const app = createApp({
     sql: runtime,
+    checkHealth: createHealthCheck(databaseUrl(runtimeName)),
     origin,
     revision: 'a'.repeat(40),
     authenticate: async (req) =>
@@ -176,6 +181,7 @@ test('HTTP routing, error redaction, bearer auth boundary, cache headers, assets
     ).status
   ).toBe(403)
   const failing = createApp({
+    checkHealth: async () => {},
     sql: (() =>
       Promise.reject(
         new Error('relation "recipes_secret_detail" does not exist')
@@ -210,6 +216,7 @@ test('stalled health probes do not exhaust the shared pool and recover', async (
   const sql = database(proxy.url)
   const app = createApp({
     sql,
+    checkHealth: createHealthCheck(proxy.url),
     authenticate: async () => null,
     origin: 'http://localhost',
     revision: 'probe-test'
@@ -243,10 +250,14 @@ test('stalled health probes do not exhaust the shared pool and recover', async (
     } finally {
       clearTimeout(timer)
     }
-    proxy.release()
+    proxy.allowNewConnections()
     expect((await app(new Request('http://localhost/healthz'))).status).toBe(
       200
     )
+    const deadline = Date.now() + 1000
+    while (proxy.stalledConnections && Date.now() < deadline)
+      await Bun.sleep(10)
+    expect(proxy.stalledConnections).toBe(0)
   } finally {
     proxy.release()
     await sql.end({ timeout: 1 })
