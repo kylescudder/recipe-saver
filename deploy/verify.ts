@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { database } from '../server/db'
+import { createDeploymentDatabase } from './database'
 const base = 'http://127.0.0.1:3000'
 const health = await fetch(base + '/healthz')
 assert.equal(health.status, 200)
@@ -37,7 +37,7 @@ assert.equal(
   403
 )
 assert.equal((await fetch(base + '/assets/does-not-exist.js')).status, 404)
-const sql = database(process.env.DATABASE_URL!)
+const sql = createDeploymentDatabase(process.env.DATABASE_URL!)
 try {
   const [role] =
     await sql`SELECT current_user AS name, rolsuper, rolcreatedb, rolcreaterole FROM pg_roles WHERE rolname = current_user`

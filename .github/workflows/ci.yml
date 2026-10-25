@@ -33,7 +33,7 @@ jobs:
       - name: Check formatting
         run: docker run --rm recipe-saver:checks bun run format:check
       - name: Test
-        run: docker run --rm --network host -e TEST_DATABASE_URL=postgres://postgres@127.0.0.1:5432/postgres recipe-saver:checks bun run test
+        run: docker run --rm --network host -e TEST_DATABASE_URL=postgres://postgres@127.0.0.1:5432/postgres recipe-saver:checks sh -c 'bun run test && bun run test:connections'
       - name: Test deployment hooks
         run: python3 -B -m unittest discover -s deploy -p 'test_*.py' -v
       - name: Test webhook receiver

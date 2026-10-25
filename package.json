@@ -14,7 +14,8 @@
     "format:check": "prettier --check .",
     "test:e2e": "playwright test",
     "lint": "eslint .",
-    "prepare": "husky"
+    "prepare": "husky",
+    "test:connections": "bun deploy/test-connection-budget.ts"
   },
   "dependencies": {
     "@clerk/backend": "3.26.2",
