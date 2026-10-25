@@ -128,3 +128,17 @@ python3 scripts/hostname.py add recipe-saver recipes.kylescudder.co.uk --upstrea
 
 App secrets, hooks, Compose and state follow the shared encrypted NAS backup
 contract.
+
+## Database connection budget
+
+The runtime role is limited to eight PostgreSQL connections. Application work
+uses at most four, health checks at most one, and deployment verification or
+database CLI work at most one. Sequential deployment commands use their own
+one-connection client instead of importing the application pool. This leaves
+two slots for operator connections during a release; owner migrations use a
+separate role.
+
+CI exercises the real deployment client against an eight-connection test role,
+with all four application slots held open. Concurrent deployment queries must
+share one backend, health must still connect, two spare slots must remain usable,
+and a ninth connection must be rejected by PostgreSQL.
