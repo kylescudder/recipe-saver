@@ -4,11 +4,13 @@ import type { Database } from './db'
 import { resolve } from 'node:path'
 export function createApp({
   sql,
+  checkHealth,
   authenticate,
   origin,
   revision
 }: {
   sql: Database
+  checkHealth: () => Promise<void>
   authenticate: (request: Request) => Promise<string | null>
   origin: string
   revision: string
@@ -20,11 +22,7 @@ export function createApp({
     // /api/health is the pre-standardisation path; remove once nothing calls it.
     if (url.pathname === '/healthz' || url.pathname === '/api/health') {
       try {
-        // Fail before the server's idle timeout drops the request.
-        await Promise.race([
-          sql`SELECT 1`,
-          Bun.sleep(3000).then(() => Promise.reject(new Error('timeout')))
-        ])
+        await checkHealth()
         response = Response.json({ ok: true, revision })
       } catch {
         response = Response.json({ ok: false }, { status: 503 })
