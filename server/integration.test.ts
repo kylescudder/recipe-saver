@@ -4,6 +4,7 @@ import postgres from 'postgres'
 import { database, migrate, type Database } from './db'
 import { appRouter } from './router'
 import { createApp } from './app'
+import { stallHealthQueries } from '../tests/postgres-proxy'
 
 if (!process.env.TEST_DATABASE_URL)
   throw new Error(
@@ -199,3 +200,56 @@ test('HTTP routing, error redaction, bearer auth boundary, cache headers, assets
   ])
     expect((await app(new Request(origin + path))).status).toBe(404)
 })
+
+test('stalled health probes do not exhaust the shared pool and recover', async () => {
+  const url = new URL(process.env.TEST_DATABASE_URL!)
+  url.username = runtimeName
+  url.password = ''
+  url.pathname = '/' + name
+  const proxy = await stallHealthQueries(url.toString())
+  const sql = database(proxy.url)
+  const app = createApp({
+    sql,
+    authenticate: async () => null,
+    origin: 'http://localhost',
+    revision: 'probe-test'
+  })
+  try {
+    const responses = await Promise.all(
+      Array.from({ length: 8 }, (_, i) =>
+        app(
+          new Request('http://localhost' + (i % 2 ? '/api/health' : '/healthz'))
+        )
+      )
+    )
+    for (const response of responses) {
+      expect(response.status).toBe(503)
+      expect(await response.json()).toEqual({ ok: false })
+      expect(response.headers.get('Cache-Control')).toBe('no-store')
+      expect(response.headers.get('X-Recipe-Saver-Revision')).toBe('probe-test')
+    }
+    let timer: ReturnType<typeof setTimeout> | undefined
+    try {
+      const rows = await Promise.race([
+        sql`SELECT 42 AS answer`,
+        new Promise<never>((_, reject) => {
+          timer = setTimeout(
+            () => reject(new Error('Health probes exhausted the shared pool')),
+            1500
+          )
+        })
+      ])
+      expect(rows[0].answer).toBe(42)
+    } finally {
+      clearTimeout(timer)
+    }
+    proxy.release()
+    expect((await app(new Request('http://localhost/healthz'))).status).toBe(
+      200
+    )
+  } finally {
+    proxy.release()
+    await sql.end({ timeout: 1 })
+    await proxy.close()
+  }
+}, 10000)
