@@ -19,8 +19,7 @@ export function createApp({
   return async (request: Request): Promise<Response> => {
     const url = new URL(request.url)
     let response: Response
-    // /api/health is the pre-standardisation path; remove once nothing calls it.
-    if (url.pathname === '/healthz' || url.pathname === '/api/health') {
+    if (url.pathname === '/healthz') {
       try {
         await checkHealth()
         response = Response.json({ ok: true, revision })

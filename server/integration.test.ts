@@ -194,11 +194,11 @@ test('HTTP routing, error redaction, bearer auth boundary, cache headers, assets
   // Database error details must never leak into the RPC response.
   expect(failed.status).toBe(500)
   expect(await failed.text()).not.toContain('recipes_secret_detail')
-  for (const path of ['/healthz', '/api/health'])
-    expect((await app(new Request(origin + path))).status).toBe(200)
+  expect((await app(new Request(origin + '/healthz'))).status).toBe(200)
   for (const path of ['/', '/recipes', '/sign-in', '/sign-up'])
     expect((await app(new Request(origin + path))).status).toBe(200)
   for (const path of [
+    '/api/health',
     '/api/missing',
     '/assets/missing.js',
     '/missing',
@@ -223,10 +223,8 @@ test('stalled health probes do not exhaust the shared pool and recover', async (
   })
   try {
     const responses = await Promise.all(
-      Array.from({ length: 8 }, (_, i) =>
-        app(
-          new Request('http://localhost' + (i % 2 ? '/api/health' : '/healthz'))
-        )
+      Array.from({ length: 8 }, () =>
+        app(new Request('http://localhost/healthz'))
       )
     )
     for (const response of responses) {
