@@ -1,6 +1,6 @@
 import { fetchRequestHandler } from '@trpc/server/adapters/fetch'
 import { appRouter } from './router'
-import type { Database } from './db'
+import { orm, type Database } from './db'
 import { resolve } from 'node:path'
 export function createApp({
   sql,
@@ -15,6 +15,7 @@ export function createApp({
   origin: string
   revision: string
 }) {
+  const db = orm(sql)
   const dist = resolve('dist')
   return async (request: Request): Promise<Response> => {
     const url = new URL(request.url)
@@ -43,7 +44,7 @@ export function createApp({
           endpoint: '/api/trpc',
           req: request,
           router: appRouter,
-          createContext: () => ({ sql, userId })
+          createContext: () => ({ db, userId })
         })
       }
     } else if (url.pathname.startsWith('/api/'))
