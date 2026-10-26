@@ -69,3 +69,5 @@ Server settings are validated with `@t3-oss/env-core` and Zod when they are read
 Production builds need no runtime credentials. Invalid settings report their names
 without logging secret values; see `.env.example` for the deployment settings.
 Migration commands validate database settings independently of Clerk configuration.
+
+`bun run test:e2e:components` checks the real UI primitives in an isolated browser fixture without Clerk credentials. The existing `test:e2e` suite still verifies authenticated application journeys with a Clerk development test login.

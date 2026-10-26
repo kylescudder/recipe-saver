@@ -1,5 +1,5 @@
 'use client'
-import { DropdownMenuTrigger } from '@radix-ui/react-dropdown-menu'
+import { DropdownMenu as DropdownMenuPrimitive } from 'radix-ui'
 import { type Table, type Column } from '@tanstack/react-table'
 import { Button } from '@/components/ui/button'
 import {
@@ -36,12 +36,12 @@ export function DataTableViewOptions<TData>({
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
+      <DropdownMenuPrimitive.Trigger asChild>
         <Button variant='outline' size='sm' className='ml-auto h-8 lg:flex'>
           <SlidersHorizontal className='mr-2 h-4 w-4' />
           View
         </Button>
-      </DropdownMenuTrigger>
+      </DropdownMenuPrimitive.Trigger>
       <DropdownMenuContent align='end' className='w-[150px]'>
         <DropdownMenuLabel>Toggle columns</DropdownMenuLabel>
         <DropdownMenuSeparator />

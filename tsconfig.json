@@ -23,6 +23,7 @@
     "deploy/*.ts",
     "vite.config.ts",
     "playwright.config.ts",
-    "e2e"
+    "e2e",
+    "playwright.components.config.ts"
   ]
 }
