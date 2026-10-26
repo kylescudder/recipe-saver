@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "@clerk/backend": "3.26.2",
-    "@clerk/react": "6.17.8",
+    "@clerk/react": "6.18.1",
     "@clerk/themes": "2.4.29",
     "@fontsource-variable/dm-sans": "5.3.0",
     "@fontsource-variable/lora": "5.3.0",
