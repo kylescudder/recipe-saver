@@ -82,9 +82,9 @@ rollback uses retained host image digests and Postgres backups only.
 GitHub's `production` environment permits `main` only. Its secrets are
 `DEPLOY_WEBHOOK_SECRET`, `CF_ACCESS_CLIENT_ID` and `CF_ACCESS_CLIENT_SECRET`; no
 database or Clerk secret goes to GitHub. Repository variables are
-`DEPLOY_ENABLED=true`, `RECIPE_SAVER_BASE_URL=https://recipes.kylescudder.co.uk`
-and `VITE_CLERK_PUBLISHABLE_KEY`, which must match the server's
-`CLERK_PUBLISHABLE_KEY`.
+`DEPLOY_ENABLED=true` and `RECIPE_SAVER_BASE_URL=https://recipes.kylescudder.co.uk`.
+The Clerk publishable key is read at runtime from the host's `.env`, so the image
+has no build-time configuration.
 
 The host's `.env`, `.env.deploy-hook`, `secrets/deploy-webhook-secret` and
 `secrets/cloudflare-access.json` are protected files ignored by Git and Docker.

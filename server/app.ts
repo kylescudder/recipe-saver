@@ -1,22 +1,21 @@
-import { fetchRequestHandler } from '@trpc/server/adapters/fetch'
-import { appRouter } from './router'
-import { orm, type Database } from './db'
 import { resolve } from 'node:path'
+
+type Handler = (request: Request) => Response | Promise<Response>
+
+// Health, static assets and response headers around the TanStack Start app.
 export function createApp({
-  sql,
+  app,
   checkHealth,
-  authenticate,
   origin,
-  revision
+  revision,
+  clientDirectory = resolve('dist/client')
 }: {
-  sql: Database
+  app: Handler
   checkHealth: () => Promise<void>
-  authenticate: (request: Request) => Promise<string | null>
   origin: string
   revision: string
+  clientDirectory?: string
 }) {
-  const db = orm(sql)
-  const dist = resolve('dist')
   return async (request: Request): Promise<Response> => {
     const url = new URL(request.url)
     let response: Response
@@ -33,42 +32,25 @@ export function createApp({
         request.headers.get('origin') !== origin
       )
         response = new Response('Forbidden', { status: 403 })
-      else {
-        let userId: string | null = null
-        try {
-          userId = await authenticate(request)
-        } catch {
-          /* authentication fails closed */
-        }
-        response = await fetchRequestHandler({
-          endpoint: '/api/trpc',
-          req: request,
-          router: appRouter,
-          createContext: () => ({ db, userId })
-        })
-      }
+      else response = await app(request)
     } else if (url.pathname.startsWith('/api/'))
       response = new Response('Not found', { status: 404 })
     else if (!['GET', 'HEAD'].includes(request.method))
       response = new Response('Method not allowed', { status: 405 })
     else {
-      const path = resolve(dist, '.' + url.pathname)
+      const path = resolve(clientDirectory, '.' + url.pathname)
       const file = Bun.file(path)
-      if (path.startsWith(dist + '/') && (await file.exists()))
+      if (
+        url.pathname !== '/' &&
+        path.startsWith(clientDirectory + '/') &&
+        (await file.exists())
+      )
         response = new Response(request.method === 'HEAD' ? null : file, {
           headers: { 'Content-Type': file.type }
         })
-      else if (
-        ['/', '/recipes', '/sign-in', '/sign-up'].includes(url.pathname) ||
-        /^\/sign-(in|up)\//.test(url.pathname)
-      )
-        response = new Response(
-          request.method === 'HEAD'
-            ? null
-            : Bun.file(resolve(dist, 'index.html')),
-          { headers: { 'Content-Type': 'text/html; charset=utf-8' } }
-        )
-      else response = new Response('Not found', { status: 404 })
+      else if (url.pathname.startsWith('/assets/'))
+        response = new Response('Not found', { status: 404 })
+      else response = await app(request)
     }
     response.headers.set('X-Recipe-Saver-Revision', revision)
     response.headers.set('X-Content-Type-Options', 'nosniff')

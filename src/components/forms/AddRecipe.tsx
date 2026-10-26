@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { IconBook2, IconLink, IconPlus } from '@tabler/icons-react'
-import { trpc } from '@/lib/trpc'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useTRPC } from '@/lib/trpc'
 import { useForm } from 'react-hook-form'
 import type { IRecipe } from '@/lib/models/recipe'
 import { Input } from '@/components/ui/input'
@@ -11,10 +12,16 @@ import { toast } from 'sonner'
 export default function AddRecipe({ open }: { open: (open: boolean) => void }) {
   const [source, setSource] = useState('website')
   const [error, setError] = useState('')
-  const utils = trpc.useUtils()
-  const save = trpc.recipes.save.useMutation({
-    onSuccess: () => utils.recipes.list.invalidate()
-  })
+  const trpc = useTRPC()
+  const queryClient = useQueryClient()
+  const save = useMutation(
+    trpc.recipes.save.mutationOptions({
+      onSuccess: () =>
+        queryClient.invalidateQueries({
+          queryKey: trpc.recipes.list.queryKey()
+        })
+    })
+  )
   const {
     register,
     handleSubmit,

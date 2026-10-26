@@ -1,4 +1,4 @@
-import { SignOutButton, useAuth } from '@clerk/react'
+import { SignOutButton, useAuth } from '@clerk/tanstack-react-start'
 import { Button } from '../ui/button'
 export default function Logout() {
   const { isSignedIn } = useAuth()

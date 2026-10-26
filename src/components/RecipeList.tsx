@@ -10,7 +10,8 @@ import {
 } from '@tabler/icons-react'
 import type { ColumnDef } from '@tanstack/react-table'
 import type { IRecipe } from '@/lib/models/recipe'
-import { trpc } from '@/lib/trpc'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useTRPC } from '@/lib/trpc'
 import { toast } from 'sonner'
 import AddRecipe from './forms/AddRecipe'
 import { Button } from './ui/button'
@@ -52,13 +53,19 @@ function sourceLabel(recipe: IRecipe) {
 }
 
 export default function RecipeList() {
-  const query = trpc.recipes.list.useQuery()
+  const trpc = useTRPC()
+  const queryClient = useQueryClient()
+  const query = useQuery(trpc.recipes.list.queryOptions())
   const recipes = query.data ?? []
-  const utils = trpc.useUtils()
-  const archive = trpc.recipes.archive.useMutation({
-    onSuccess: () => utils.recipes.list.invalidate(),
-    onError: () => toast.error('Could not archive recipe. Please try again.')
-  })
+  const archive = useMutation(
+    trpc.recipes.archive.mutationOptions({
+      onSuccess: () =>
+        queryClient.invalidateQueries({
+          queryKey: trpc.recipes.list.queryKey()
+        }),
+      onError: () => toast.error('Could not archive recipe. Please try again.')
+    })
+  )
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState('')
   const isDesktop = useMediaQuery('(min-width: 768px)')

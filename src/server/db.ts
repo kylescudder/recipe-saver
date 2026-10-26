@@ -18,7 +18,7 @@ export type Orm = ReturnType<typeof orm>
 // runtime role cannot read or change.
 export async function migrate(sql: Database) {
   await migrateDrizzle(orm(sql), {
-    migrationsFolder: new URL('../drizzle', import.meta.url).pathname,
+    migrationsFolder: new URL('../../drizzle', import.meta.url).pathname,
     migrationsSchema: 'drizzle',
     migrationsTable: '__drizzle_migrations'
   })

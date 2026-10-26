@@ -45,10 +45,6 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Require the Recipe Saver Clerk instance
-        env:
-          CLERK_KEY: ${{ vars.VITE_CLERK_PUBLISHABLE_KEY }}
-        run: test -n "$CLERK_KEY"
       - id: build
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
@@ -60,7 +56,6 @@ jobs:
             org.opencontainers.image.revision=${{ github.sha }}
           build-args: |
             RECIPE_SAVER_REVISION=${{ github.sha }}
-            VITE_CLERK_PUBLISHABLE_KEY=${{ vars.VITE_CLERK_PUBLISHABLE_KEY }}
           provenance: false
           sbom: false
       - name: Record digest
