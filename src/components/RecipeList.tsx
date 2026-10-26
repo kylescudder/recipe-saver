@@ -1,13 +1,13 @@
 import { useState } from 'react'
 import {
-  IconArchive,
-  IconBook2,
-  IconDots,
-  IconExternalLink,
-  IconPlus,
-  IconSearch,
-  IconX
-} from '@tabler/icons-react'
+  Archive,
+  Book,
+  Ellipsis,
+  ExternalLink,
+  Plus,
+  Search,
+  X
+} from 'lucide-react'
 import type { ColumnDef } from '@tanstack/react-table'
 import type { IRecipe } from '@/lib/models/recipe'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -111,12 +111,12 @@ export default function RecipeList() {
             title={recipe.recipeLink}
           >
             <span>{sourceLabel(recipe)}</span>
-            <IconExternalLink size={15} aria-hidden='true' />
+            <ExternalLink size={15} aria-hidden='true' />
             <span className='sr-only'> (opens in a new tab)</span>
           </a>
         ) : (
           <div className='recipe-source book-source'>
-            <IconBook2 size={16} aria-hidden='true' />
+            <Book size={16} aria-hidden='true' />
             <span>
               {recipe.recipeBook}
               {recipe.recipePageNo && (
@@ -141,7 +141,7 @@ export default function RecipeList() {
               className='recipe-menu'
               aria-label={`Options for ${row.original.recipeName}`}
             >
-              <IconDots size={20} />
+              <Ellipsis size={20} />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align='end'>
@@ -149,7 +149,7 @@ export default function RecipeList() {
               disabled={archive.isPending}
               onClick={() => onArchive(row.original)}
             >
-              <IconArchive size={16} className='mr-2' />
+              <Archive size={16} className='mr-2' />
               Archive recipe
             </DropdownMenuItem>
           </DropdownMenuContent>
@@ -159,7 +159,7 @@ export default function RecipeList() {
   ]
   const addButton = (
     <Button id='add-button' className='add-recipe-button'>
-      <IconPlus size={17} aria-hidden='true' />
+      <Plus size={17} aria-hidden='true' />
       Add recipe
     </Button>
   )
@@ -193,7 +193,7 @@ export default function RecipeList() {
             className='drawer-close'
             aria-label='Close'
           >
-            <IconX size={18} />
+            <X size={18} />
           </Button>
         </DrawerClose>
         <AddRecipe open={setOpen} />
@@ -227,7 +227,7 @@ export default function RecipeList() {
           data={filtered}
           toolbar={
             <div className='recipe-search'>
-              <IconSearch size={18} aria-hidden='true' />
+              <Search size={18} aria-hidden='true' />
               <Input
                 type='search'
                 aria-label='Search recipes'
@@ -241,7 +241,7 @@ export default function RecipeList() {
                   aria-label='Clear search'
                   onClick={() => setSearch('')}
                 >
-                  <IconX size={15} />
+                  <X size={15} />
                 </button>
               )}
             </div>
@@ -249,7 +249,7 @@ export default function RecipeList() {
           emptyState={
             search ? (
               <div className='empty-index'>
-                <IconSearch size={28} stroke={1.3} />
+                <Search size={28} strokeWidth={1.3} />
                 <h2>No recipe by that name.</h2>
                 <p>
                   Try another search, or find your way back to the full index.
@@ -260,14 +260,14 @@ export default function RecipeList() {
               </div>
             ) : (
               <div className='empty-index'>
-                <IconBook2 size={36} stroke={1.2} />
+                <Book size={36} strokeWidth={1.2} />
                 <h2>The first page is yours.</h2>
                 <p>
                   Save a favourite from a website or cookbook to start your
                   collection.
                 </p>
                 <Button variant='outline' onClick={() => setOpen(true)}>
-                  <IconPlus size={16} className='mr-2' />
+                  <Plus size={16} className='mr-2' />
                   Add your first recipe
                 </Button>
               </div>

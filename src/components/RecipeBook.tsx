@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { IconBook2 } from '@tabler/icons-react'
+import { Book } from 'lucide-react'
 
 function KitchenDrawing() {
   return (
@@ -44,7 +44,7 @@ export default function RecipeBook({ children }: { children: ReactNode }) {
     <div className='recipe-book'>
       <aside className='book-intro'>
         <div className='book-inscription'>
-          <IconBook2 size={19} stroke={1.4} /> The household recipe book
+          <Book size={19} strokeWidth={1.4} /> The household recipe book
         </div>
         <h2>
           Good food.

@@ -9,12 +9,7 @@ import {
   DropdownMenuTrigger
 } from './dropdown-menu'
 import { Button } from './button'
-import {
-  IconCaretDown,
-  IconCaretUp,
-  IconCaretUpDown,
-  IconEyeOff
-} from '@tabler/icons-react'
+import { ArrowDown, ArrowUp, ChevronsUpDown, EyeOff } from 'lucide-react'
 
 interface DataTableColumnHeaderProps<
   TData,
@@ -44,26 +39,26 @@ export function DataTableColumnHeader<TData, TValue>({
           >
             <span>{title}</span>
             {column.getIsSorted() === 'desc' ? (
-              <IconCaretDown className='ml-2 h-4 w-4' />
+              <ArrowDown className='ml-2 h-4 w-4' />
             ) : column.getIsSorted() === 'asc' ? (
-              <IconCaretUp className='ml-2 h-4 w-4' />
+              <ArrowUp className='ml-2 h-4 w-4' />
             ) : (
-              <IconCaretUpDown className='ml-2 h-4 w-4' />
+              <ChevronsUpDown className='ml-2 h-4 w-4' />
             )}
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align='start'>
           <DropdownMenuItem onClick={() => column.toggleSorting(false)}>
-            <IconCaretUp className='text-muted-foreground/70 mr-2 h-3.5 w-3.5' />
-            A to Z
+            <ArrowUp className='text-muted-foreground/70 mr-2 h-3.5 w-3.5' />A
+            to Z
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => column.toggleSorting(true)}>
-            <IconCaretDown className='text-muted-foreground/70 mr-2 h-3.5 w-3.5' />
-            Z to A
+            <ArrowDown className='text-muted-foreground/70 mr-2 h-3.5 w-3.5' />Z
+            to A
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => column.toggleVisibility(false)}>
-            <IconEyeOff className='text-muted-foreground/70 mr-2 h-3.5 w-3.5' />
+            <EyeOff className='text-muted-foreground/70 mr-2 h-3.5 w-3.5' />
             Hide
           </DropdownMenuItem>
         </DropdownMenuContent>

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { IconBook2, IconLink, IconPlus } from '@tabler/icons-react'
+import { Book, LinkIcon, Plus } from 'lucide-react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTRPC } from '@/lib/trpc'
 import { useForm } from 'react-hook-form'
@@ -93,12 +93,12 @@ export default function AddRecipe({ open }: { open: (open: boolean) => void }) {
         >
           <label className='source-option' htmlFor='website'>
             <RadioGroupItem value='website' id='website' />
-            <IconLink size={18} aria-hidden='true' />
+            <LinkIcon size={18} aria-hidden='true' />
             <span>A website</span>
           </label>
           <label className='source-option' htmlFor='book'>
             <RadioGroupItem value='book' id='book' />
-            <IconBook2 size={18} aria-hidden='true' />
+            <Book size={18} aria-hidden='true' />
             <span>A cookbook</span>
           </label>
         </RadioGroup>
@@ -183,7 +183,7 @@ export default function AddRecipe({ open }: { open: (open: boolean) => void }) {
       <div className='recipe-form-footer'>
         <p>One more good thing in your collection.</p>
         <Button type='submit' disabled={save.isPending}>
-          <IconPlus size={16} className='mr-2' />
+          <Plus size={16} className='mr-2' />
           {save.isPending ? 'Saving recipe…' : 'Save recipe'}
         </Button>
       </div>

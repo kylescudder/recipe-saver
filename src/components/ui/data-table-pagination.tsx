@@ -8,11 +8,11 @@ import {
 } from './select'
 import { Button } from './button'
 import {
-  IconChevronLeft,
-  IconChevronLeftPipe,
-  IconChevronRight,
-  IconChevronRightPipe
-} from '@tabler/icons-react'
+  ChevronLeft,
+  ChevronFirst,
+  ChevronRight,
+  ChevronLast
+} from 'lucide-react'
 
 interface DataTablePaginationProps<TData> {
   table: Table<TData>
@@ -59,7 +59,7 @@ export function DataTablePagination<TData>({
             disabled={!table.getCanPreviousPage()}
           >
             <span className='sr-only'>Go to first page</span>
-            <IconChevronLeftPipe className='h-4 w-4' />
+            <ChevronFirst className='h-4 w-4' />
           </Button>
           <Button
             variant='outline'
@@ -68,7 +68,7 @@ export function DataTablePagination<TData>({
             disabled={!table.getCanPreviousPage()}
           >
             <span className='sr-only'>Go to previous page</span>
-            <IconChevronLeft className='h-4 w-4' />
+            <ChevronLeft className='h-4 w-4' />
           </Button>
           <Button
             variant='outline'
@@ -77,7 +77,7 @@ export function DataTablePagination<TData>({
             disabled={!table.getCanNextPage()}
           >
             <span className='sr-only'>Go to next page</span>
-            <IconChevronRight className='h-4 w-4' />
+            <ChevronRight className='h-4 w-4' />
           </Button>
           <Button
             variant='outline'
@@ -86,7 +86,7 @@ export function DataTablePagination<TData>({
             disabled={!table.getCanNextPage()}
           >
             <span className='sr-only'>Go to last page</span>
-            <IconChevronRightPipe className='h-4 w-4' />
+            <ChevronLast className='h-4 w-4' />
           </Button>
         </div>
       </div>
