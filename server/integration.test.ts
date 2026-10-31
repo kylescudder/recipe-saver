@@ -32,8 +32,8 @@ function databaseUrl(user: string, db = name) {
   url.pathname = '/' + db
   return url.toString()
 }
-function client(user: string, db = name) {
-  const sql = database(databaseUrl(user, db))
+function client(user: string, db = name, max = 4) {
+  const sql = database(databaseUrl(user, db), max)
   clients.push(sql)
   return sql
 }
@@ -65,7 +65,7 @@ beforeAll(async () => {
     await admin.unsafe(`REVOKE ALL ON DATABASE "${db}" FROM PUBLIC`)
   }
   await admin.unsafe(`GRANT CONNECT ON DATABASE "${name}" TO "${runtimeName}"`)
-  owner = client(ownerName)
+  owner = client(ownerName, name, 1)
   await owner.unsafe(`REVOKE ALL ON SCHEMA public FROM PUBLIC;
     GRANT USAGE ON SCHEMA public TO "${runtimeName}";
     ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO "${runtimeName}";`)
@@ -82,6 +82,19 @@ afterAll(async () => {
     if (created.includes(role)) await admin.unsafe(`DROP ROLE "${role}"`)
   await admin.end({ timeout: 1 })
 })
+test('runtime connections use bounded timeouts and reconnect after idle retirement', async () => {
+  const sql = client(runtimeName)
+  expect(sql.options).toMatchObject({
+    max: 4,
+    idle_timeout: 20,
+    connect_timeout: 10
+  })
+  const [first] = await sql`SELECT pg_backend_pid() AS pid`
+  expect((await sql`SELECT pg_backend_pid() AS pid`)[0].pid).toBe(first.pid)
+  await Bun.sleep(21_000)
+  const [next] = await sql`SELECT pg_backend_pid() AS pid`
+  expect(next.pid).not.toBe(first.pid)
+}, 25_000)
 test('all recipe procedures reject unauthenticated access', async () => {
   const anonymous = caller(null)
   for (const operation of [
@@ -133,6 +146,24 @@ test('shared household create/update/list/archive, stable IDs and source validat
   ).rejects.toMatchObject({ code: 'NOT_FOUND' })
 })
 test('owner migrations are repeatable; runtime cannot perform DDL, see the journal or enter another database', async () => {
+  expect(owner.options.max).toBe(1)
+  const backends = await Promise.all(
+    Array.from(
+      { length: 4 },
+      () => owner`SELECT pg_backend_pid() AS pid, pg_sleep(0.05)`
+    )
+  )
+  expect(new Set(backends.map(([row]) => row.pid)).size).toBe(1)
+  const command = Bun.spawn([process.execPath, 'server/migrate.ts'], {
+    env: { DATABASE_URL: databaseUrl(ownerName) },
+    stdout: 'pipe',
+    stderr: 'pipe'
+  })
+  expect(await command.exited).toBe(0)
+  expect(await new Response(command.stdout).text()).toContain(
+    'Recipe Saver schema is ready'
+  )
+  expect(await new Response(command.stderr).text()).toBe('')
   await migrate(owner)
   expect(
     (

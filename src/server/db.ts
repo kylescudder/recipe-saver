@@ -3,8 +3,13 @@ import { migrate as migrateDrizzle } from 'drizzle-orm/postgres-js/migrator'
 import postgres from 'postgres'
 import * as schema from './schema'
 
-export function database(url: string) {
-  return postgres(url, { max: 4, onnotice: () => {} })
+export function database(url: string, max = 4) {
+  return postgres(url, {
+    max,
+    idle_timeout: 20,
+    connect_timeout: 10,
+    onnotice: () => {}
+  })
 }
 export type Database = ReturnType<typeof database>
 
