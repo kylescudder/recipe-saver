@@ -1,6 +1,9 @@
 import assert from 'node:assert/strict'
 import { randomUUID } from 'node:crypto'
 import { createDeploymentDatabase } from './database'
+import { database } from '../src/server/db'
+import { createHealthCheck } from '../src/server/health'
+import { stallHealthQueries } from '../tests/postgres-proxy'
 import postgres from 'postgres'
 function connect(url: string, max: number) {
   return adapt(postgres(url, { max, connect_timeout: 3, onnotice: () => {} }))
@@ -46,24 +49,35 @@ async function checkBudget() {
   const role = 'budget_' + randomUUID().replaceAll('-', '')
   const pools: Client[] = []
   const held: Reservation[] = []
+  let healthProxy: Awaited<ReturnType<typeof stallHealthQueries>> | undefined
+  let healthProbes: Promise<PromiseSettledResult<void>[]> | undefined
   let created = false
   try {
     await admin.query(
       `CREATE ROLE "${role}" LOGIN NOSUPERUSER CONNECTION LIMIT 8`
     )
     created = true
-    const [database] = await admin.query('SELECT current_database() AS name')
-    const name = String(database!.name).replaceAll('"', '""')
+    const [currentDatabase] = await admin.query(
+      'SELECT current_database() AS name'
+    )
+    const name = String(currentDatabase!.name).replaceAll('"', '""')
     await admin.query(`GRANT CONNECT ON DATABASE "${name}" TO "${role}"`)
     const url = new URL(controlUrl)
     url.username = role
     url.password = ''
-    const app = connect(url.toString(), 4)
+    const appSql = database(url.toString())
+    const app = adapt(appSql)
     const deployment = adapt(createDeploymentDatabase(url.toString()))
-    const health = connect(url.toString(), 1)
     const spare = connect(url.toString(), 2)
     const overflow = connect(url.toString(), 1)
-    pools.push(app, deployment, health, spare, overflow)
+    pools.push(app, deployment, spare, overflow)
+    assert.equal(appSql.options.max, 4)
+    const appRows = await Promise.all(
+      Array.from({ length: 8 }, () =>
+        app.query('SELECT pg_backend_pid() AS pid, pg_sleep(0.05)')
+      )
+    )
+    assert.equal(new Set(appRows.map(([row]) => row!.pid)).size, 4)
     // Hold every application slot, rather than relying on a quiet test pool.
     for (let i = 0; i < 4; i++) {
       const connection = await app.reserve()
@@ -78,9 +92,20 @@ async function checkBudget() {
       )
     )
     assert.equal(new Set(rows.map(([row]) => row!.pid)).size, 1)
-    const probe = await health.reserve()
-    held.push(probe)
-    assert.equal((await probe.query('SELECT 42 AS answer'))[0]!.answer, 42)
+    // Hold the real health query long enough to measure its separate connection.
+    healthProxy = await stallHealthQueries(url.toString())
+    const checkHealth = createHealthCheck(healthProxy.url)
+    healthProbes = Promise.allSettled(
+      Array.from({ length: 8 }, () => checkHealth())
+    )
+    const deadline = Date.now() + 1000
+    while (!healthProxy.stalledConnections && Date.now() < deadline)
+      await Bun.sleep(10)
+    assert.equal(healthProxy.stalledConnections, 1)
+    const [connections] = await admin.query(
+      `SELECT count(*)::int AS total FROM pg_stat_activity WHERE usename = '${role}'`
+    )
+    assert.equal(connections!.total, 6)
     // The app, verifier and health occupy six slots, leaving two for operator work.
     for (let i = 0; i < 2; i++) {
       const connection = await spare.reserve()
@@ -99,7 +124,13 @@ async function checkBudget() {
       true,
       'The ninth connection must hit the real role limit'
     )
+    healthProxy.release()
+    for (const probe of await healthProbes)
+      assert.equal(probe.status, 'fulfilled')
   } finally {
+    healthProxy?.release()
+    await healthProbes
+    await healthProxy?.close()
     await Promise.all(held.map((connection) => connection.release()))
     await Promise.all(pools.map((pool) => pool.close()))
     if (created) {
