@@ -337,7 +337,7 @@ test('email codes go only to invited emails, are hashed and single-use, and open
 test('cross-site requests, other OTP types and exhausted attempts are refused', async () => {
   const fixture = await authFixture()
   for (const headers of [
-    { Origin: 'https://evil.example' },
+    { Origin: 'https://evil.example' } as Record<string, string>,
     { Origin: origin, 'Sec-Fetch-Site': 'cross-site' }
   ])
     expect(
