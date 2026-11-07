@@ -5,8 +5,13 @@ Save website recipes and cookbook page references in a shared household collecti
 A TanStack Start app (Router, Query and Table) with a typed tRPC API, served by Bun.
 Clerk authenticates every recipe procedure, and PostgreSQL persists recipes
 through [Drizzle](https://orm.drizzle.team).
-Recipe access requires a Clerk session. The household collection is shared between
-signed-in users.
+Recipe access requires a signed-in session. The household collection is shared
+between signed-in users.
+
+`AUTH_PROVIDER` selects the sign-in provider. `clerk` is the default. With
+`better-auth`, the app uses [Better Auth](https://better-auth.com) instead, with
+an invite-only allowlist (`AUTH_ALLOWED_EMAILS`), email codes, magic links,
+passwords and passkeys. See [deploy/README.md](deploy/README.md#better-auth-rollout-and-clerk-rollback).
 
 ## Development
 

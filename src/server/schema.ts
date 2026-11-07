@@ -1,6 +1,8 @@
 import { sql } from 'drizzle-orm'
 import { boolean, index, pgTable, text } from 'drizzle-orm/pg-core'
 
+export * from './auth-schema'
+
 export const recipes = pgTable(
   'recipes',
   {

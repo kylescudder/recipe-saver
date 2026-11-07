@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react'
 import { ClerkProvider, useAuth } from '@clerk/tanstack-react-start'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import {
@@ -11,15 +11,28 @@ import { createTRPCClient, httpBatchLink } from '@trpc/client'
 import type { AppRouter } from '@/server/router'
 import { TRPCProvider } from '@/lib/trpc'
 import Topbar from '@/components/shared/Topbar'
+import Logout from '@/components/shared/Logout'
 import RecipeBook from '@/components/RecipeBook'
 import { OpeningBook } from '@/components/auth'
 import { ThemeProvider } from '@/components/theme-provider'
 import { Toaster } from '@/components/ui/sonner'
+import { getAuthConfig } from '@/lib/auth-config'
+import { authClient } from '@/lib/auth-client'
+import { clearPendingSignIn } from '@/lib/pending-sign-in'
 import '@/styles/globals.css'
 import '@fontsource-variable/lora'
 import '@fontsource-variable/dm-sans'
 
+const BetterAuthUserMenu = lazy(() =>
+  import('@/components/BetterAuthUserMenu').then(({ BetterAuthUserMenu }) => ({
+    default: BetterAuthUserMenu
+  }))
+)
+
 export const Route = createRootRoute({
+  // The provider is fixed for the life of the server process.
+  loader: () => getAuthConfig(),
+  staleTime: Infinity,
   head: () => ({
     meta: [
       { charSet: 'UTF-8' },
@@ -65,26 +78,48 @@ function RootComponent() {
           registrations.forEach((registration) => registration.unregister())
         )
   }, [])
+  if (Route.useLoaderData().provider === 'better-auth') return <BetterAuthApp />
   return (
     <ClerkProvider
       signInUrl='/sign-in'
       signUpUrl='/sign-up'
       afterSignOutUrl='/sign-in'
     >
-      <App />
+      <ClerkApp />
     </ClerkProvider>
   )
 }
 
-function App() {
+function ClerkApp() {
   const { isLoaded, userId } = useAuth()
   if (!isLoaded) return <OpeningBook />
   // A fresh provider per identity isolates cached household data without
   // cancelling the new identity's active queries during its first render.
-  return <SessionApp key={userId ?? 'signed-out'} />
+  return <SessionApp key={userId ?? 'signed-out'} account={<Logout />} />
 }
 
-function SessionApp() {
+function BetterAuthApp() {
+  const { data: session, isPending } = authClient.useSession()
+  useEffect(() => {
+    if (session) clearPendingSignIn()
+  }, [session])
+  if (isPending) return <OpeningBook />
+  return (
+    <SessionApp
+      key={session?.user.id ?? 'signed-out'}
+      account={
+        session ? (
+          // Loaded only once signed in, keeping the auth UI off other pages.
+          <Suspense fallback={<span className='account-placeholder' />}>
+            <BetterAuthUserMenu />
+          </Suspense>
+        ) : null
+      }
+    />
+  )
+}
+
+function SessionApp({ account }: { account: ReactNode }) {
   const [queryClient] = useState(
     () => new QueryClient({ defaultOptions: { queries: { retry: 1 } } })
   )
@@ -100,7 +135,7 @@ function SessionApp() {
           <a className='skip-link' href='#main-content'>
             Skip to content
           </a>
-          <Topbar />
+          <Topbar account={account} />
           <main className='site-main' id='main-content'>
             <RecipeBook>
               <Outlet />

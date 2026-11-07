@@ -26,7 +26,11 @@ export function createApp({
       } catch {
         response = Response.json({ ok: false }, { status: 503 })
       }
-    } else if (url.pathname.startsWith('/api/trpc/')) {
+    } else if (
+      url.pathname.startsWith('/api/trpc/') ||
+      // Better Auth endpoints; the route itself returns 404 under Clerk.
+      url.pathname.startsWith('/api/auth/')
+    ) {
       if (
         request.headers.has('origin') &&
         request.headers.get('origin') !== origin
