@@ -203,8 +203,24 @@ tab-scoped storage.
 
 Signed-in users get an avatar menu (Better Auth UI `UserButton`) with Profile and
 Sign out; sign-out returns to the homepage. `/profile` has a display name,
-optional first/last names, the read-only verified email, password and passkeys.
-There are no profile photos, so no extra storage is needed.
+optional first/last names, the read-only verified email, a profile photo,
+password and passkeys.
+
+The profile photo is shown in the header `UserButton` and managed from Profile.
+The browser crops it to a 512-pixel JPEG; `/api/profile/avatar` (GET, PUT,
+DELETE) then accepts JPEG, PNG or WebP up to 2 MB and 4 megapixels, checks the
+file signature, decodes and re-encodes it with `sharp` to a 256-pixel JPEG
+without metadata, and stores it as `bytea` in the `user_profile` table added by
+migration `0002_profile`. The photo is therefore covered by the existing
+encrypted database backups; no volume, service, credential or DNS change is
+needed. Each user can read and change only their own photo, with the same rule as
+the rest of the app (verified email still in `AUTH_ALLOWED_EMAILS`). Responses
+are `no-store`, `nosniff` and same-origin only, writes need this site's
+`Origin`, and every change gets a new version in the image URL.
+`/update-user` accepts only that server-owned URL (or `null` after removal),
+never an arbitrary image URL. Under Clerk the endpoint returns 404. The server
+accepts request bodies up to 2 MB plus headroom for this endpoint only; every
+other path keeps the 64 KiB limit. On rollback leave `user_profile` in place.
 
 To roll back, set `AUTH_PROVIDER=clerk` and recreate only the app service with the
 same image. Keep the Clerk keys, its production instance and DNS available. Leave

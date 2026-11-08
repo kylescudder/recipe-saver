@@ -1,5 +1,6 @@
-// Optional name parts and the read-only verified email. Recipe Saver has no
-// file storage, so profile photos are not offered.
+import { avatarRequest, prepareAvatar } from './profile'
+
+// Optional name parts and the read-only verified email.
 export const profileFields = [
   {
     name: 'givenName',
@@ -31,3 +32,25 @@ export const profileFields = [
     copyable: true
   }
 ]
+
+// The photo lives in the app's Postgres behind /api/profile/avatar. Upload and
+// removal change the stored photo first; update-user then only confirms it.
+export const profileAvatar = {
+  enabled: true,
+  size: 512,
+  extension: 'jpg' as const,
+  resize: async (file: File) =>
+    new File([await prepareAvatar(file)], 'avatar.jpg', { type: 'image/jpeg' }),
+  upload: async (file: File) => {
+    const image = await avatarRequest({
+      method: 'PUT',
+      headers: { 'Content-Type': 'image/jpeg' },
+      body: file
+    })
+    if (!image) throw new Error('The photo could not be uploaded.')
+    return image
+  },
+  delete: async () => {
+    await avatarRequest({ method: 'DELETE' })
+  }
+}

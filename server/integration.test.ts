@@ -169,7 +169,7 @@ test('owner migrations are repeatable; runtime cannot perform DDL, see the journ
     (
       await owner`SELECT count(*)::int AS applied FROM drizzle.__drizzle_migrations`
     )[0].applied
-  ).toBe(2)
+  ).toBe(3)
   await denied(runtime`SELECT hash FROM drizzle.__drizzle_migrations`)
   expect(
     (await runtime`SELECT count(*)::int AS rows FROM recipes`)[0].rows

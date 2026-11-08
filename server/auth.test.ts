@@ -9,6 +9,8 @@ import {
   createRecipeSaverAuth
 } from '../src/server/auth-factory'
 import { createTrpcHandler } from '../src/server/trpc-handler'
+import { createProfileHandler } from '../src/server/profile-handler'
+import sharp from 'sharp'
 import { createApp } from './app'
 
 if (!process.env.TEST_DATABASE_URL)
@@ -241,7 +243,8 @@ test('adding Better Auth is additive and preserves existing recipes', async () =
     'auth_session',
     'auth_user',
     'auth_verification',
-    'recipes'
+    'recipes',
+    'user_profile'
   ])
   const columns = await owner`SELECT column_name FROM information_schema.columns
     WHERE table_name = 'recipes' ORDER BY column_name`
@@ -471,6 +474,163 @@ test('profile updates accept names only, from this site', async () => {
     email: 'cook@example.com',
     image: null
   })
+})
+
+test('profile photos are private, re-encoded and owned by one invited user', async () => {
+  const fixture = await authFixture()
+  const first = await signIn(fixture)
+  const second = await signIn(fixture, 'second@example.com')
+  const photos = createProfileHandler(fixture.db, {
+    origin,
+    allowedEmails: allowed,
+    getSession: (headers) => fixture.auth.api.getSession({ headers })
+  })
+  const photo = (
+    method: string,
+    cookie: string,
+    body?: BodyInit,
+    headers: Record<string, string> = {}
+  ) =>
+    photos(
+      new Request(origin + '/api/profile/avatar', {
+        method,
+        headers: {
+          Origin: origin,
+          Cookie: cookie,
+          ...(body ? { 'Content-Type': 'image/jpeg' } : {}),
+          ...headers
+        },
+        body
+      })
+    )
+  const image = (background: string, format: 'jpeg' | 'png' = 'jpeg') =>
+    sharp({ create: { width: 640, height: 480, channels: 3, background } })
+      .withExif({ IFD0: { Copyright: 'Private GPS note' } })
+      .toFormat(format)
+      .toBuffer()
+  const original = await image('#2f6b3a')
+  expect((await sharp(original).metadata()).exif).toBeDefined()
+
+  expect((await photo('GET', '')).status).toBe(401)
+  expect((await photo('PUT', '', original)).status).toBe(401)
+  expect((await photo('GET', first.cookie)).status).toBe(404)
+  // Writes must come from this site.
+  expect(
+    (
+      await photo('PUT', first.cookie, original, {
+        Origin: 'https://evil.example'
+      })
+    ).status
+  ).toBe(403)
+
+  const uploaded = await photo('PUT', first.cookie, original)
+  expect(uploaded.status).toBe(200)
+  const { image: url } = (await uploaded.json()) as { image: string }
+  expect(url).toMatch(/^\/api\/profile\/avatar\?v=[\w-]+$/)
+  const [user] =
+    await owner`SELECT image FROM auth_user WHERE id = ${first.user.id}`
+  expect(user!.image).toBe(url)
+  const read = await photo('GET', first.cookie)
+  expect(read.status).toBe(200)
+  expect(read.headers.get('content-type')).toBe('image/jpeg')
+  expect(read.headers.get('cache-control')).toBe('no-store')
+  expect(read.headers.get('x-content-type-options')).toBe('nosniff')
+  expect(read.headers.get('cross-origin-resource-policy')).toBe('same-origin')
+  const stored = Buffer.from(await read.arrayBuffer())
+  const metadata = await sharp(stored).metadata()
+  expect(metadata).toMatchObject({ format: 'jpeg', width: 256, height: 256 })
+  expect(metadata.exif).toBeUndefined()
+  expect(stored.includes('Private GPS note')).toBe(false)
+
+  // Another invited user sees only their own (missing) photo.
+  expect((await photo('GET', second.cookie)).status).toBe(404)
+  // A user removed from the allowlist, or unverified, loses access at once.
+  await owner`UPDATE auth_user SET email_verified = false WHERE id = ${first.user.id}`
+  expect((await photo('GET', first.cookie)).status).toBe(403)
+  await owner`UPDATE auth_user SET email_verified = true WHERE id = ${first.user.id}`
+
+  // update-user confirms only the stored photo URL, never an arbitrary one.
+  const update = (body: unknown) =>
+    fixture.request('/update-user', body, first.cookie)
+  expect((await update({ image: '/api/profile/avatar?v=other' })).status).toBe(
+    400
+  )
+  expect((await update({ image: null })).status).toBe(400)
+  expect((await update({ image: url })).status).toBe(200)
+
+  // Replacing changes the version; PNG input is still served as JPEG.
+  const replaced = await photo(
+    'PUT',
+    first.cookie,
+    await image('#c45a2b', 'png'),
+    { 'Content-Type': 'image/png' }
+  )
+  expect(replaced.status).toBe(200)
+  const { image: newUrl } = (await replaced.json()) as { image: string }
+  expect(newUrl).not.toBe(url)
+  const second256 = Buffer.from(
+    await (await photo('GET', first.cookie)).arrayBuffer()
+  )
+  expect(second256.equals(stored)).toBe(false)
+  expect((await sharp(second256).metadata()).format).toBe('jpeg')
+
+  // Wrong types, non-images, broken images and oversized uploads fail. The
+  // file signature, not the declared type, picks the decoder.
+  expect(
+    (
+      await photo('PUT', first.cookie, '<svg/>', {
+        'Content-Type': 'image/svg+xml'
+      })
+    ).status
+  ).toBe(415)
+  expect((await photo('PUT', first.cookie, 'not an image')).status).toBe(400)
+  expect(
+    (
+      await photo('PUT', first.cookie, await image('#000000', 'png'), {
+        'Content-Type': 'image/jpeg'
+      })
+    ).status
+  ).toBe(200)
+  const truncated = original.subarray(0, 200)
+  expect((await photo('PUT', first.cookie, truncated)).status).toBe(400)
+  const huge = Buffer.concat([
+    Buffer.from([0xff, 0xd8, 0xff]),
+    Buffer.alloc(2 * 1024 * 1024)
+  ])
+  expect((await photo('PUT', first.cookie, huge)).status).toBe(413)
+  // Size is enforced while streaming, even without a declared length.
+  const chunked = new ReadableStream<Uint8Array>({
+    start(controller) {
+      controller.enqueue(new Uint8Array(huge))
+      controller.close()
+    }
+  })
+  expect(
+    (
+      await photos(
+        new Request(origin + '/api/profile/avatar', {
+          method: 'PUT',
+          headers: {
+            Origin: origin,
+            Cookie: first.cookie,
+            'Content-Type': 'image/jpeg'
+          },
+          body: chunked,
+          duplex: 'half'
+        } as RequestInit)
+      )
+    ).status
+  ).toBe(413)
+
+  const removed = await photo('DELETE', first.cookie)
+  expect(removed.status).toBe(200)
+  expect(await removed.json()).toEqual({ image: null })
+  expect((await photo('GET', first.cookie)).status).toBe(404)
+  const [cleared] =
+    await owner`SELECT u.image, p.avatar FROM auth_user u JOIN user_profile p ON p.user_id = u.id WHERE u.id = ${first.user.id}`
+  expect(cleared).toEqual({ image: null, avatar: null })
+  expect((await update({ image: null })).status).toBe(200)
+  expect((await photo('POST', first.cookie, original)).status).toBe(405)
 })
 
 test('passwords, reset links and magic links are invite-only, same-site and single-use', async () => {
@@ -713,6 +873,55 @@ test('the app forwards only the auth endpoints it uses, and none under Clerk', a
     expect((await app(new Request(origin + path))).status).toBe(200)
   const page = await (await app(new Request(origin + '/auth/sign-in'))).text()
   expect(page).not.toContain('clerk.')
+  // The photo endpoint is served through the app, signed-in only, and keeps
+  // the 64 KiB body cap for every other path.
+  const avatar = (method: string, body?: BodyInit, headers = {}) =>
+    app(
+      new Request(origin + '/api/profile/avatar', {
+        method,
+        headers: { Origin: origin, 'Content-Type': 'image/jpeg', ...headers },
+        body
+      })
+    )
+  expect((await avatar('GET')).status).toBe(401)
+  expect((await avatar('PUT', new Uint8Array(200_000))).status).toBe(401)
+  expect(
+    (await avatar('GET', undefined, { Origin: 'https://evil.example' })).status
+  ).toBe(403)
+  const sized = (size: number) => ({ 'Content-Length': String(size) })
+  expect(
+    (await avatar('PUT', new Uint8Array(200_000), sized(200_000))).status
+  ).toBe(401)
+  const tooBig = 3 * 1024 * 1024
+  expect(
+    (await avatar('PUT', new Uint8Array(tooBig), sized(tooBig))).status
+  ).toBe(413)
+  const padded = JSON.stringify({ padding: 'x'.repeat(70_000) })
+  const signInWith = (body: BodyInit, headers = {}) =>
+    app(
+      new Request(origin + '/api/auth/sign-in/email', {
+        method: 'POST',
+        headers: {
+          Origin: origin,
+          'Content-Type': 'application/json',
+          'CF-Connecting-IP': '198.51.100.' + ++fixtureNumber,
+          ...headers
+        },
+        body,
+        duplex: 'half'
+      } as RequestInit)
+    )
+  expect((await signInWith(padded, sized(padded.length))).status).toBe(413)
+  // A body without a declared length is cut off once it passes 64 KiB.
+  const streamed = await signInWith(
+    new ReadableStream({
+      start(controller) {
+        controller.enqueue(new TextEncoder().encode(padded))
+        controller.close()
+      }
+    })
+  )
+  expect(streamed.status).toBeGreaterThanOrEqual(400)
 
   // With the default provider, none of Better Auth is reachable.
   process.env.AUTH_PROVIDER = 'clerk'
@@ -722,5 +931,8 @@ test('the app forwards only the auth endpoints it uses, and none under Clerk', a
     '/email-otp/send-verification-otp'
   ])
     expect((await call(path)).status).toBe(404)
+  expect((await avatar('GET')).status).toBe(404)
+  expect((await avatar('PUT', new Uint8Array(1000))).status).toBe(404)
+  expect((await avatar('DELETE')).status).toBe(404)
   expect((await app(new Request(origin + '/sign-in'))).status).toBe(200)
 })

@@ -1,4 +1,5 @@
 import { createHmac } from 'node:crypto'
+import { eq } from 'drizzle-orm'
 import { betterAuth } from 'better-auth'
 import {
   APIError,
@@ -13,6 +14,7 @@ import type { Orm } from './db'
 import * as schema from './auth-schema'
 import { reserveEmailDelivery, type LinkEmailKind } from './auth-email'
 import { isAllowedEmail, isVerifiedAllowedUser } from './auth-policy'
+import { userProfile } from './profile-schema'
 
 const hasUnsafeCharacters = (value: string) =>
   [...value].some((character) => {
@@ -32,8 +34,8 @@ export function isSameSiteTarget(target: unknown, origin: string) {
   return url.origin === origin && !url.pathname.startsWith('//')
 }
 
-// Profile edits: names only. Recipe Saver stores no profile photos, and the
-// verified email is read-only.
+// Profile edits: names, plus confirming the server-owned photo URL that
+// /api/profile/avatar has just set or cleared. The verified email is read-only.
 const profileUpdateSchema = z
   .strictObject({
     name: z.string().trim().min(1).max(120).optional(),
@@ -50,7 +52,8 @@ const profileUpdateSchema = z
       .max(100)
       .nullable()
       .transform((value) => value ?? '')
-      .optional()
+      .optional(),
+    image: z.string().max(200).nullable().optional()
   })
   .refine((value) => Object.keys(value).length > 0)
 
@@ -194,6 +197,20 @@ export function createRecipeSaverAuth(
             throw new APIError('BAD_REQUEST', {
               message: 'Invalid profile update'
             })
+          if (parsed.data.image !== undefined) {
+            // Only the photo stored for this user, never an arbitrary URL.
+            const [photo] = await database
+              .select({ version: userProfile.avatarVersion })
+              .from(userProfile)
+              .where(eq(userProfile.userId, session!.user.id))
+            const expected = photo?.version
+              ? '/api/profile/avatar?v=' + photo.version
+              : null
+            if (parsed.data.image !== expected)
+              throw new APIError('BAD_REQUEST', {
+                message: 'Upload or remove your profile photo first'
+              })
+          }
           Object.assign(ctx.body, parsed.data)
         }
         if (ctx.path === '/email-otp/send-verification-otp') {

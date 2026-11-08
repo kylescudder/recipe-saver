@@ -29,7 +29,7 @@ function ProfilePage() {
           <Link to='/'>Back to your recipes</Link>
         </p>
         <h1>Your profile.</h1>
-        <p>Your name, password and passkeys for Recipe Saver.</p>
+        <p>Your name, photo, password and passkeys for Recipe Saver.</p>
       </div>
       <BetterAuthUIProvider redirectTo='/profile'>
         <BetterAuthProfile />
