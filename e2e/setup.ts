@@ -12,7 +12,7 @@ export default async function setup(config: FullConfig) {
   const password = process.env.E2E_PASSWORD
   if (!username || !password)
     throw new Error(
-      'Set E2E_USERNAME and E2E_PASSWORD to an existing Clerk DEV test login.'
+      'Set E2E_USERNAME and E2E_PASSWORD to an invited test account with a password.'
     )
   await mkdir('state/design-overhaul', { recursive: true })
   // Login has no tracing or screenshots: credentials never enter test artifacts.
@@ -21,9 +21,9 @@ export default async function setup(config: FullConfig) {
     const page = await browser.newPage()
     await page.goto(baseURL)
     await page.waitForURL(/sign-in/)
-    await page.locator('#identifier-field').fill(username)
-    await page.locator('#password-field').fill(password)
-    await page.getByRole('button', { name: 'Continue', exact: true }).click()
+    await page.locator('#email').fill(username)
+    await page.locator('#password').fill(password)
+    await page.getByRole('button', { name: 'Sign In', exact: true }).click()
     await page.waitForURL((url) => !url.pathname.includes('sign-in'), {
       timeout: 30000
     })

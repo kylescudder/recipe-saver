@@ -1,10 +1,4 @@
-import {
-  createFileRoute,
-  Link,
-  Navigate,
-  useLoaderData,
-  useNavigate
-} from '@tanstack/react-router'
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useQueryClient } from '@tanstack/react-query'
 import { useSession } from '@better-auth-ui/react'
 import { useEffect, useState } from 'react'
@@ -20,9 +14,6 @@ import { BetterAuthUIProvider } from '@/components/BetterAuthUIProvider'
 export const Route = createFileRoute('/profile')({ component: ProfilePage })
 
 function ProfilePage() {
-  const { provider } = useLoaderData({ from: '__root__' })
-  // Clerk mode has no profile page; its account is managed by Clerk.
-  if (provider !== 'better-auth') return <Navigate to='/' replace />
   return (
     <div className='profile-page'>
       <div className='page-heading'>

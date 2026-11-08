@@ -182,10 +182,7 @@ test('keyboard dialog dismissal returns focus to the add button', async ({
   ).toBeFocused()
 })
 
-test('signed-out access redirects to Clerk sign-in', async ({
-  browser,
-  baseURL
-}) => {
+test('signed-out access redirects to sign-in', async ({ browser, baseURL }) => {
   const context = await browser.newContext({
     storageState: { cookies: [], origins: [] }
   })

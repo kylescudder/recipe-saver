@@ -37,10 +37,8 @@ Compose limits it to 256 MiB, one CPU, 128 processes and bounded logs, drops all
 capabilities and uses a read-only root filesystem. The API uses four pooled
 Postgres connections.
 
-All recipe RPCs require a verified session: Clerk by default, or Better Auth
-when `AUTH_PROVIDER=better-auth` (see below). The app uses the
-production instance of the Recipe Saver Clerk application, served from
-`clerk.recipes.kylescudder.co.uk`. Do not substitute another app's Clerk instance.
+All recipe RPCs require a verified Better Auth session from an allowlisted
+household email (see [Authentication](#authentication)).
 
 The receiver joins only `platform-web`, has no Docker socket, host shell
 credentials or database access, and can write only its queue. It reads only the
@@ -82,10 +80,10 @@ rollback uses retained host image digests and Postgres backups only.
 
 GitHub's `production` environment permits `main` only. Its secrets are
 `DEPLOY_WEBHOOK_SECRET`, `CF_ACCESS_CLIENT_ID` and `CF_ACCESS_CLIENT_SECRET`; no
-database or Clerk secret goes to GitHub. Repository variables are
+database or auth secret goes to GitHub. Repository variables are
 `DEPLOY_ENABLED=true` and `RECIPE_SAVER_BASE_URL=https://recipes.kylescudder.co.uk`.
-The Clerk publishable key is read at runtime from the host's `.env`, so the image
-has no build-time configuration.
+All app settings are read at runtime from the host's `.env`, so the image has no
+build-time configuration.
 
 The host's `.env`, `.env.deploy-hook`, `secrets/deploy-webhook-secret` and
 `secrets/cloudflare-access.json` are protected files ignored by Git and Docker.
@@ -130,26 +128,20 @@ python3 scripts/hostname.py add recipe-saver recipes.kylescudder.co.uk --upstrea
 App secrets, hooks, Compose and state follow the shared encrypted NAS backup
 contract.
 
-## Better Auth rollout and Clerk rollback
+## Authentication
 
-`AUTH_PROVIDER` selects exactly one authentication provider for both the server
-and the rendered client. It defaults to `clerk`, so the additive release can be
-deployed before changing the production sign-in flow. Provider changes require
-recreating the app container; do not try to hot-swap its process environment.
-With `clerk`, `/api/auth/*` returns 404 and Clerk behaves exactly as before.
+The app uses [Better Auth](https://better-auth.com), invite-only. Its tables
+(`auth_user`, `auth_session`, `auth_account`, `auth_verification`,
+`auth_passkey`, `auth_rate_limit`, `auth_email_limit`, from migration
+`0001_better_auth`) sit beside `recipes`, which they do not touch. Recipes are a
+shared household collection with no per-user ownership: access is decided by the
+allowlist alone. tRPC and Better Auth share the runtime's four-connection pool
+and restricted role.
 
-The `0001_better_auth` owner migration adds `auth_user`, `auth_session`,
-`auth_account`, `auth_verification`, `auth_passkey`, `auth_rate_limit` and
-`auth_email_limit`. It does not touch `recipes`. Recipes are a shared household
-collection with no per-user ownership, so there are no Clerk user IDs to link and
-no user-linking script: access is decided by the allowlist alone. The runtime
-keeps its existing four-connection pool and restricted role; tRPC and Better Auth
-share that pool.
-
-Prepare these settings in the host's protected `.env`, retaining the Clerk keys:
+The host's protected `.env` holds these settings alongside `DATABASE_URL` and
+`APP_ORIGIN`:
 
 ```dotenv
-AUTH_PROVIDER=clerk
 BETTER_AUTH_URL=https://recipes.kylescudder.co.uk
 BETTER_AUTH_SECRET=<stable, cryptographically random app-specific secret>
 BREVO_API_KEY=<Recipe Saver transactional API key>
@@ -158,30 +150,24 @@ AUTH_EMAIL_DAILY_LIMIT=40
 AUTH_ALLOWED_EMAILS=<comma-separated household emails>
 ```
 
-`BETTER_AUTH_URL` must equal `APP_ORIGIN` and use HTTPS in production. Generate a
-secret of at least 32 characters and keep it stable across releases. Keep it and
-the sending API key out of Git, image layers and CI. These settings are validated
-only when Better Auth is selected, and errors name fields without printing values.
+All of them except `AUTH_EMAIL_DAILY_LIMIT` are required; the app refuses to
+start without them, and errors name fields without printing values. Other
+variables in `.env` are ignored. `BETTER_AUTH_URL` must equal `APP_ORIGIN` and
+use HTTPS in production. Generate a secret of at least 32 characters and keep it
+stable across releases: changing it signs everyone out. Keep it and the sending
+API key out of Git, image layers and CI. Settings changes take effect when the
+`recipe-saver` service is recreated.
 
 `AUTH_ALLOWED_EMAILS` is the server-side access list. Accounts are created only
-for listed emails, by an email code or magic link that proves ownership; Clerk
-user IDs are never trusted or imported. Every recipe RPC also requires a verified
-email that is still listed, so removing an address revokes access on the next
-request. The passkey RP ID is the exact hostname in `BETTER_AUTH_URL`.
-
-Cutover:
-
-1. Deploy the image through the central service with `AUTH_PROVIDER=clerk`.
-   Owner migrations add the auth tables; acceptance checks are unchanged.
-2. Add the settings above to the host `.env`.
-3. Set `AUTH_PROVIDER=better-auth` and recreate only the `recipe-saver` service
-   with the same image. Verify sign-in with an email code, the recipe list,
-   signed-out API rejection, Profile, setting a password and passkey enrollment.
+for listed emails, by an email code or magic link that proves ownership. Every
+recipe RPC also requires a verified email that is still listed, so removing an
+address revokes access on the next request. The passkey RP ID is the exact
+hostname in `BETTER_AUTH_URL`.
 
 Sign-in lives at `/auth/<view>` and offers four methods, each linking to the
 others: password (`/auth/sign-in`), email code (`/auth/email-otp`), magic link
 (`/auth/magic-link`) and passkey. Forgot/reset password use
-`/auth/forgot-password` and `/auth/reset-password`. The old `/sign-in` and
+`/auth/forgot-password` and `/auth/reset-password`. The older `/sign-in` and
 `/sign-up` paths, and `/auth/sign-up`, redirect to `/auth/sign-in`. Every method
 returns to the recipe list, or to a same-site `?redirectTo=` path such as
 `/profile`. Off-site `redirectTo`, `callbackURL` and reset `redirectTo` values are
@@ -218,14 +204,8 @@ the rest of the app (verified email still in `AUTH_ALLOWED_EMAILS`). Responses
 are `no-store`, `nosniff` and same-origin only, writes need this site's
 `Origin`, and every change gets a new version in the image URL.
 `/update-user` accepts only that server-owned URL (or `null` after removal),
-never an arbitrary image URL. Under Clerk the endpoint returns 404. The server
-accepts request bodies up to 2 MB plus headroom for this endpoint only; every
-other path keeps the 64 KiB limit. On rollback leave `user_profile` in place.
-
-To roll back, set `AUTH_PROVIDER=clerk` and recreate only the app service with the
-same image. Keep the Clerk keys, its production instance and DNS available. Leave
-the additive auth tables in place; never restore an older database just to change
-providers, because that would discard newer recipes.
+never an arbitrary image URL. The server accepts request bodies up to 2 MB plus
+headroom for this endpoint only; every other path keeps the 64 KiB limit.
 
 Brevo's free plan adds a `List-Unsubscribe` header even to transactional emails,
 which some clients show as a mailing-list banner; it cannot be removed without

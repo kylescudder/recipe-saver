@@ -1,8 +1,4 @@
-import {
-  createFileRoute,
-  Navigate,
-  useLoaderData
-} from '@tanstack/react-router'
+import { createFileRoute, Navigate } from '@tanstack/react-router'
 import { Auth } from '@/components/auth/auth'
 import { BetterAuthUIProvider } from '@/components/BetterAuthUIProvider'
 
@@ -21,11 +17,7 @@ const headings: Record<string, { context: string; title: string }> = {
 }
 
 function AuthPage() {
-  const { provider } = useLoaderData({ from: '__root__' })
   const { path } = Route.useParams()
-  // Clerk keeps its own sign-in pages; these routes are Better Auth only.
-  if (provider !== 'better-auth')
-    return <Navigate to='/sign-in/$' params={{ _splat: '' }} replace />
   // Recipe Saver is invite-only, so there is no sign-up form.
   if (path === 'sign-up')
     return <Navigate to='/auth/$path' params={{ path: 'sign-in' }} replace />
