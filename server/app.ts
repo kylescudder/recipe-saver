@@ -57,8 +57,7 @@ export function createApp({
       }
     } else if (
       url.pathname.startsWith('/api/trpc/') ||
-      // Better Auth endpoints and the profile photo; both routes return 404
-      // under Clerk.
+      // Better Auth endpoints and the profile photo.
       url.pathname.startsWith('/api/auth/') ||
       url.pathname === uploadPath
     ) {

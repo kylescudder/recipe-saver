@@ -52,7 +52,7 @@ export const recipeInput = z
   )
 export const appRouter = t.router({
   // The original application is a shared household recipe collection. All
-  // signed-in Clerk users see it; identity always comes from the session.
+  // signed-in household members see it; identity always comes from the session.
   recipes: t.router({
     list: authenticated.query(({ ctx }) =>
       ctx.db

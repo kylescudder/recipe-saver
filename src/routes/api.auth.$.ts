@@ -1,5 +1,4 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { readEnv } from '@/server/env'
 import { getBetterAuth } from '@/server/auth'
 
 // Only the endpoints the app uses. Sign-up is closed: Recipe Saver is
@@ -33,7 +32,7 @@ function isForwardedAuthPath(path: string) {
 
 async function handler(request: Request) {
   const path = new URL(request.url).pathname.slice('/api/auth'.length)
-  if (readEnv().AUTH_PROVIDER !== 'better-auth' || !isForwardedAuthPath(path))
+  if (!isForwardedAuthPath(path))
     return new Response('Not found', { status: 404 })
   return getBetterAuth().handler(request)
 }

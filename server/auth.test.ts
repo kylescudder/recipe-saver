@@ -1,4 +1,4 @@
-// Better Auth against a disposable PostgreSQL database. Clerk is untouched.
+// Better Auth against a disposable PostgreSQL database.
 import { afterAll, beforeAll, expect, test } from 'bun:test'
 import { randomUUID } from 'node:crypto'
 import { existsSync } from 'node:fs'
@@ -34,9 +34,6 @@ const secret = randomUUID() + randomUUID()
 const envKeys = [
   'APP_ORIGIN',
   'DATABASE_URL',
-  'AUTH_PROVIDER',
-  'CLERK_PUBLISHABLE_KEY',
-  'CLERK_SECRET_KEY',
   'BETTER_AUTH_URL',
   'BETTER_AUTH_SECRET',
   'BREVO_API_KEY',
@@ -838,15 +835,12 @@ test('passwords, reset links and magic links are invite-only, same-site and sing
   ).toBe(0)
 })
 
-test('the app forwards only the auth endpoints it uses, and none under Clerk', async () => {
+test('the app forwards only the auth endpoints it uses', async () => {
   if (!existsSync('dist/server/server.js'))
     throw new Error('Run bun run build before this test')
   Object.assign(process.env, {
     APP_ORIGIN: origin,
     DATABASE_URL: databaseUrl(runtimeName),
-    CLERK_PUBLISHABLE_KEY: 'pk_live_Y2xlcmsuZXhhbXBsZS5jb20k',
-    CLERK_SECRET_KEY: 'sk_live_test',
-    AUTH_PROVIDER: 'better-auth',
     BETTER_AUTH_URL: origin,
     BETTER_AUTH_SECRET: secret,
     BREVO_API_KEY: 'fixture-never-used-to-send',
@@ -907,11 +901,16 @@ test('the app forwards only the auth endpoints it uses, and none under Clerk', a
     (await call('/get-session', 'GET', { Origin: 'https://evil.example' }))
       .status
   ).toBe(403)
-  // The sign-in pages render; Clerk's pages hand over to them.
-  for (const path of ['/auth/sign-in', '/auth/email-otp', '/auth/magic-link'])
+  // The sign-in pages render, and the older /sign-in and /sign-up links still
+  // open and hand over to them.
+  for (const path of [
+    '/auth/sign-in',
+    '/auth/email-otp',
+    '/auth/magic-link',
+    '/sign-in',
+    '/sign-up'
+  ])
     expect((await app(new Request(origin + path))).status).toBe(200)
-  const page = await (await app(new Request(origin + '/auth/sign-in'))).text()
-  expect(page).not.toContain('clerk.')
   // The photo endpoint is served through the app, signed-in only, and keeps
   // the 64 KiB body cap for every other path.
   const avatar = (method: string, body?: BodyInit, headers = {}) =>
@@ -961,17 +960,4 @@ test('the app forwards only the auth endpoints it uses, and none under Clerk', a
     })
   )
   expect(streamed.status).toBeGreaterThanOrEqual(400)
-
-  // With the default provider, none of Better Auth is reachable.
-  process.env.AUTH_PROVIDER = 'clerk'
-  for (const path of [
-    '/get-session',
-    '/sign-in/email-otp',
-    '/email-otp/send-verification-otp'
-  ])
-    expect((await call(path)).status).toBe(404)
-  expect((await avatar('GET')).status).toBe(404)
-  expect((await avatar('PUT', new Uint8Array(1000))).status).toBe(404)
-  expect((await avatar('DELETE')).status).toBe(404)
-  expect((await app(new Request(origin + '/sign-in'))).status).toBe(200)
 })

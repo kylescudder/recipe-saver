@@ -106,14 +106,14 @@ test('all recipe procedures reject unauthenticated access', async () => {
   }
 })
 test('any signed-in user reaches the shared collection immediately', async () => {
-  expect(await caller('clerk-new').recipes.list()).toHaveLength(0)
+  expect(await caller('user-new').recipes.list()).toHaveLength(0)
 })
 test('shared household create/update/list/archive, stable IDs and source validation', async () => {
-  const cook = caller('clerk-cook')
+  const cook = caller('user-cook')
   const saved = await cook.recipes.save(recipe)
   expect(saved._id).toBeTruthy()
   expect(
-    (await caller('clerk-second').recipes.list()).some(
+    (await caller('user-second').recipes.list()).some(
       (row) => row._id === saved._id
     )
   ).toBe(true)
@@ -184,20 +184,18 @@ test('owner migrations are repeatable; runtime cannot perform DDL, see the journ
 })
 test('HTTP routing, error redaction, bearer auth boundary, cache headers, assets and health', async () => {
   const origin = 'https://recipes.example'
-  // Pages come from the real Start build; tRPC gets a test identity instead of Clerk.
+  // Pages come from the real Start build; tRPC gets a test identity instead of a session.
   if (!existsSync('dist/server/server.js'))
     throw new Error('Run bun run build before this test')
   process.env.APP_ORIGIN = origin
   process.env.DATABASE_URL = databaseUrl(runtimeName)
-  process.env.CLERK_PUBLISHABLE_KEY = 'pk_live_Y2xlcmsuZXhhbXBsZS5jb20k'
-  process.env.CLERK_SECRET_KEY = 'sk_live_test'
   const { default: start } = (await import(
     '../dist/server/server.js' as string
   )) as { default: { fetch: (request: Request) => Promise<Response> } }
   const pages = (request: Request) => start.fetch(request)
   const trpc = createTrpcHandler(orm(runtime), async (req) =>
     req.headers.get('authorization') === 'Bearer test-session'
-      ? 'clerk-cook'
+      ? 'user-cook'
       : null
   )
   const app = createApp({
@@ -251,7 +249,7 @@ test('HTTP routing, error redaction, bearer auth boundary, cache headers, assets
           }
         } as unknown as Database
       ),
-      async () => 'clerk-cook'
+      async () => 'user-cook'
     )
   })
   const failed = await failing(new Request(origin + '/api/trpc/recipes.list'))

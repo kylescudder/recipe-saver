@@ -9,8 +9,7 @@ import {
   uniqueIndex
 } from 'drizzle-orm/pg-core'
 
-// Separate, additive tables: Clerk rollback never requires removing auth data
-// or restoring an older copy of the shared recipe collection.
+// Better Auth's tables, kept apart from the shared recipe collection.
 export const authUser = pgTable('auth_user', {
   id: text('id').primaryKey(),
   name: text('name').notNull(),

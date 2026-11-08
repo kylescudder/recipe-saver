@@ -3,9 +3,13 @@ import { readDatabaseEnv, readEnv } from '../src/server/env'
 
 const valid = {
   DATABASE_URL: 'postgres://fixture:password@localhost:5432/app',
-  CLERK_PUBLISHABLE_KEY: 'public-fixture',
-  CLERK_SECRET_KEY: 'secret-fixture',
-  APP_ORIGIN: 'https://recipes.example.com'
+  APP_ORIGIN: 'https://recipes.example.com',
+  BETTER_AUTH_URL: 'https://recipes.example.com',
+  BETTER_AUTH_SECRET:
+    'fixture-secret-that-is-longer-than-thirty-two-characters',
+  BREVO_API_KEY: 'fixture-api-key',
+  AUTH_EMAIL_FROM: 'recipes@example.com',
+  AUTH_ALLOWED_EMAILS: 'cook@example.com'
 }
 
 test('valid runtime settings are typed and use the app defaults', () => {
@@ -51,15 +55,6 @@ test('configuration errors identify fields without printing secret values', () =
   }
 })
 
-test('missing Clerk credentials fail runtime validation', () => {
-  expect(() => readEnv({ ...valid, CLERK_SECRET_KEY: '' })).toThrow(
-    'CLERK_SECRET_KEY'
-  )
-  expect(() => readEnv({ ...valid, CLERK_PUBLISHABLE_KEY: undefined })).toThrow(
-    'CLERK_PUBLISHABLE_KEY'
-  )
-})
-
 test('the application URL must be an HTTP origin without credentials or a path', () => {
   expect(
     readEnv({ ...valid, APP_ORIGIN: 'https://recipes.example.com/' }).APP_ORIGIN
@@ -74,61 +69,47 @@ test('the application URL must be an HTTP origin without credentials or a path',
   }
 })
 
-const better = {
-  DATABASE_URL: valid.DATABASE_URL,
-  APP_ORIGIN: 'https://recipes.example.com',
-  AUTH_PROVIDER: 'better-auth',
-  BETTER_AUTH_URL: 'https://recipes.example.com',
-  BETTER_AUTH_SECRET:
-    'fixture-secret-that-is-longer-than-thirty-two-characters',
-  BREVO_API_KEY: 'fixture-api-key',
-  AUTH_EMAIL_FROM: 'recipes@example.com',
-  AUTH_ALLOWED_EMAILS: 'cook@example.com'
-}
-
-test('Clerk stays the default provider', () => {
-  expect(readEnv(valid).AUTH_PROVIDER).toBe('clerk')
-  expect(readEnv(valid).AUTH_ALLOWED_EMAILS).toEqual([])
-  expect(() => readEnv({ ...valid, AUTH_PROVIDER: 'unknown' })).toThrow(
-    'AUTH_PROVIDER'
-  )
-})
-
-test('Better Auth settings are required only when it is selected', () => {
-  const env = readEnv(better)
-  expect(env.AUTH_PROVIDER).toBe('better-auth')
-  expect(env.CLERK_SECRET_KEY).toBeUndefined()
-  expect(env.AUTH_EMAIL_DAILY_LIMIT).toBe(40)
+test('Better Auth settings are required', () => {
+  expect(readEnv(valid).AUTH_EMAIL_DAILY_LIMIT).toBe(40)
   for (const key of [
     'BETTER_AUTH_URL',
     'BETTER_AUTH_SECRET',
     'BREVO_API_KEY',
     'AUTH_EMAIL_FROM',
     'AUTH_ALLOWED_EMAILS'
-  ])
-    expect(() => readEnv({ ...better, [key]: '' })).toThrow(key)
-  expect(() => readEnv({ ...better, BETTER_AUTH_SECRET: 'short' })).toThrow(
+  ]) {
+    expect(() => readEnv({ ...valid, [key]: '' })).toThrow(key)
+    expect(() => readEnv({ ...valid, [key]: undefined })).toThrow(key)
+  }
+  expect(() => readEnv({ ...valid, BETTER_AUTH_SECRET: 'short' })).toThrow(
     'BETTER_AUTH_SECRET'
   )
-  expect(() => readEnv({ ...better, AUTH_EMAIL_DAILY_LIMIT: '301' })).toThrow(
+  expect(() => readEnv({ ...valid, AUTH_EMAIL_DAILY_LIMIT: '301' })).toThrow(
     'AUTH_EMAIL_DAILY_LIMIT'
   )
-  expect(() => readEnv({ ...better, AUTH_EMAIL_FROM: 'not-an-email' })).toThrow(
+  expect(() => readEnv({ ...valid, AUTH_EMAIL_FROM: 'not-an-email' })).toThrow(
     'AUTH_EMAIL_FROM'
   )
-  // Keeping the Clerk keys available supports a configuration rollback.
-  expect(
-    readEnv({ ...valid, ...better, AUTH_PROVIDER: 'clerk' }).AUTH_PROVIDER
-  ).toBe('clerk')
+})
+
+test('settings from the retired auth provider are ignored', () => {
+  const env = readEnv({
+    ...valid,
+    AUTH_PROVIDER: 'clerk',
+    CLERK_PUBLISHABLE_KEY: 'pk_live_fixture',
+    CLERK_SECRET_KEY: 'sk_live_fixture'
+  })
+  expect(env.BETTER_AUTH_URL).toBe(valid.BETTER_AUTH_URL)
+  expect(Object.keys(env)).not.toContain('AUTH_PROVIDER')
 })
 
 test('Better Auth must use the public HTTPS application origin', () => {
   expect(() =>
-    readEnv({ ...better, BETTER_AUTH_URL: 'https://other.example.com' })
+    readEnv({ ...valid, BETTER_AUTH_URL: 'https://other.example.com' })
   ).toThrow('BETTER_AUTH_URL')
   expect(() =>
     readEnv({
-      ...better,
+      ...valid,
       NODE_ENV: 'production',
       APP_ORIGIN: 'http://recipes.example.com',
       BETTER_AUTH_URL: 'http://recipes.example.com'
@@ -136,7 +117,7 @@ test('Better Auth must use the public HTTPS application origin', () => {
   ).toThrow('BETTER_AUTH_URL')
   expect(
     readEnv({
-      ...better,
+      ...valid,
       APP_ORIGIN: 'http://localhost:3923',
       BETTER_AUTH_URL: 'http://localhost:3923/'
     }).BETTER_AUTH_URL
@@ -146,11 +127,11 @@ test('Better Auth must use the public HTTPS application origin', () => {
 test('allowed emails are validated and normalized', () => {
   expect(
     readEnv({
-      ...better,
+      ...valid,
       AUTH_ALLOWED_EMAILS: ' Cook@Example.com, second@example.com ,'
     }).AUTH_ALLOWED_EMAILS
   ).toEqual(['cook@example.com', 'second@example.com'])
   expect(() =>
-    readEnv({ ...better, AUTH_ALLOWED_EMAILS: 'cook@example.com,invalid' })
+    readEnv({ ...valid, AUTH_ALLOWED_EMAILS: 'cook@example.com,invalid' })
   ).toThrow('AUTH_ALLOWED_EMAILS')
 })
