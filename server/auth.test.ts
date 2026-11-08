@@ -285,12 +285,14 @@ test('email codes go only to invited emails, are hashed and single-use, and open
     .digest('hex')
   expect(stored.value).toBe(expected + ':0')
 
-  // Per-recipient cooldown: one email a minute, previous code still valid.
+  // Per-recipient cooldown: one email a minute, previous code still valid. The
+  // refusal looks exactly like the answer for an address that gets no mail.
   const again = await fixture.request('/email-otp/send-verification-otp', {
     email: 'cook@example.com',
     type: 'sign-in'
   })
-  expect(again.status).toBe(429)
+  expect(again.status).toBe(200)
+  expect(await again.json()).toEqual({ success: true })
   expect(fixture.sent.get('cook@example.com')).toBe(otp)
 
   const wrong = otp === '000000' ? '111111' : '000000'
@@ -381,6 +383,43 @@ test('cross-site requests, other OTP types and exhausted attempts are refused', 
   })
   expect(exhausted.status).toBe(403)
   expect((await owner`SELECT id FROM auth_user`).length).toBe(0)
+})
+
+test('a throttled invited address gets the same answer as an unlisted one', async () => {
+  const fixture = await authFixture()
+  const endpoints = [
+    ['/email-otp/send-verification-otp', { type: 'sign-in' }],
+    ['/sign-in/magic-link', { callbackURL: '/' }],
+    ['/request-password-reset', { redirectTo: '/auth/reset-password' }]
+  ] as const
+  const answer = async (path: string, extra: object, email: string) => {
+    const response = await fixture.request(path, { email, ...extra })
+    return { status: response.status, body: await response.text() }
+  }
+  expect(
+    (await answer(endpoints[0][0], endpoints[0][1], 'cook@example.com')).status
+  ).toBe(200)
+  const code = fixture.sent.get('cook@example.com')!
+  for (const [path, extra] of endpoints) {
+    const throttled = await answer(path, extra, 'cook@example.com')
+    const unlisted = await answer(path, extra, 'stranger@example.com')
+    expect(throttled, path).toEqual(unlisted)
+    expect(throttled.status, path).toBe(200)
+  }
+  // Nothing more was sent or charged, and the first code still works.
+  expect(fixture.links.length).toBe(0)
+  expect(fixture.sent.get('cook@example.com')).toBe(code)
+  const [global] =
+    await owner`SELECT count FROM auth_email_limit WHERE key = 'global:day'`
+  expect(global.count).toBe(1)
+  expect(
+    (
+      await fixture.request('/sign-in/email-otp', {
+        email: 'cook@example.com',
+        otp: code
+      })
+    ).status
+  ).toBe(200)
 })
 
 test('the app-wide daily email budget is shared and atomic', async () => {
