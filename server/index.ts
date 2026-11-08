@@ -1,4 +1,4 @@
-import { createApp } from './app'
+import { createApp, maxUploadBody } from './app'
 import { createHealthCheck } from '../src/server/health'
 import { readEnv } from '../src/server/env'
 
@@ -9,7 +9,8 @@ const { default: start } = (await import(serverEntry)) as {
   default: { fetch: (request: Request) => Response | Promise<Response> }
 }
 export default {
-  maxRequestBodySize: 65536,
+  // createApp caps every other request at 64 KiB.
+  maxRequestBodySize: maxUploadBody,
   hostname: '0.0.0.0',
   port: env.PORT,
   fetch: createApp({

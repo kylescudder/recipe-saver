@@ -37,7 +37,8 @@ Compose limits it to 256 MiB, one CPU, 128 processes and bounded logs, drops all
 capabilities and uses a read-only root filesystem. The API uses four pooled
 Postgres connections.
 
-All recipe RPCs require a verified Clerk session. The app uses the
+All recipe RPCs require a verified session: Clerk by default, or Better Auth
+when `AUTH_PROVIDER=better-auth` (see below). The app uses the
 production instance of the Recipe Saver Clerk application, served from
 `clerk.recipes.kylescudder.co.uk`. Do not substitute another app's Clerk instance.
 
@@ -128,6 +129,107 @@ python3 scripts/hostname.py add recipe-saver recipes.kylescudder.co.uk --upstrea
 
 App secrets, hooks, Compose and state follow the shared encrypted NAS backup
 contract.
+
+## Better Auth rollout and Clerk rollback
+
+`AUTH_PROVIDER` selects exactly one authentication provider for both the server
+and the rendered client. It defaults to `clerk`, so the additive release can be
+deployed before changing the production sign-in flow. Provider changes require
+recreating the app container; do not try to hot-swap its process environment.
+With `clerk`, `/api/auth/*` returns 404 and Clerk behaves exactly as before.
+
+The `0001_better_auth` owner migration adds `auth_user`, `auth_session`,
+`auth_account`, `auth_verification`, `auth_passkey`, `auth_rate_limit` and
+`auth_email_limit`. It does not touch `recipes`. Recipes are a shared household
+collection with no per-user ownership, so there are no Clerk user IDs to link and
+no user-linking script: access is decided by the allowlist alone. The runtime
+keeps its existing four-connection pool and restricted role; tRPC and Better Auth
+share that pool.
+
+Prepare these settings in the host's protected `.env`, retaining the Clerk keys:
+
+```dotenv
+AUTH_PROVIDER=clerk
+BETTER_AUTH_URL=https://recipes.kylescudder.co.uk
+BETTER_AUTH_SECRET=<stable, cryptographically random app-specific secret>
+BREVO_API_KEY=<Recipe Saver transactional API key>
+AUTH_EMAIL_FROM=<verified Brevo sender, e.g. recipes@kylescudder.co.uk>
+AUTH_EMAIL_DAILY_LIMIT=40
+AUTH_ALLOWED_EMAILS=<comma-separated household emails>
+```
+
+`BETTER_AUTH_URL` must equal `APP_ORIGIN` and use HTTPS in production. Generate a
+secret of at least 32 characters and keep it stable across releases. Keep it and
+the sending API key out of Git, image layers and CI. These settings are validated
+only when Better Auth is selected, and errors name fields without printing values.
+
+`AUTH_ALLOWED_EMAILS` is the server-side access list. Accounts are created only
+for listed emails, by an email code or magic link that proves ownership; Clerk
+user IDs are never trusted or imported. Every recipe RPC also requires a verified
+email that is still listed, so removing an address revokes access on the next
+request. The passkey RP ID is the exact hostname in `BETTER_AUTH_URL`.
+
+Cutover:
+
+1. Deploy the image through the central service with `AUTH_PROVIDER=clerk`.
+   Owner migrations add the auth tables; acceptance checks are unchanged.
+2. Add the settings above to the host `.env`.
+3. Set `AUTH_PROVIDER=better-auth` and recreate only the `recipe-saver` service
+   with the same image. Verify sign-in with an email code, the recipe list,
+   signed-out API rejection, Profile, setting a password and passkey enrollment.
+
+Sign-in lives at `/auth/<view>` and offers four methods, each linking to the
+others: password (`/auth/sign-in`), email code (`/auth/email-otp`), magic link
+(`/auth/magic-link`) and passkey. Forgot/reset password use
+`/auth/forgot-password` and `/auth/reset-password`. The old `/sign-in` and
+`/sign-up` paths, and `/auth/sign-up`, redirect to `/auth/sign-in`. Every method
+returns to the recipe list, or to a same-site `?redirectTo=` path such as
+`/profile`. Off-site `redirectTo`, `callbackURL` and reset `redirectTo` values are
+refused, including `//host`, `/.//host`, backslashes and control characters.
+
+There is no sign-up. A password is added from Profile ("Set password" sends a
+reset link) and changed there. Passwords are 12–128 characters, and a reset
+revokes existing sessions. Email codes are six digits, valid once for ten minutes
+with five attempts, and stored as a keyed hash. Magic links (10 minutes, stored
+hashed) and reset links (30 minutes) are single-use. Emails go only to allowlisted
+addresses; everyone else gets the same generic response. Persistent limits include
+a 60-second per-recipient cooldown, five sends per recipient per hour, an app-wide
+delivery-attempt budget (`AUTH_EMAIL_DAILY_LIMIT`, default 40 per rolling 24
+hours) and per-IP auth rate limits stored in Postgres. `/api/auth/*` forwards only
+the endpoints the app uses and returns 404 for everything else, including
+`/sign-up/email`. On phones, email codes are the most reliable method; the
+code form survives a reload by keeping only the pending email and request time in
+tab-scoped storage.
+
+Signed-in users get an avatar menu (Better Auth UI `UserButton`) with Profile and
+Sign out; sign-out returns to the homepage. `/profile` has a display name,
+optional first/last names, the read-only verified email, a profile photo,
+password and passkeys.
+
+The profile photo is shown in the header `UserButton` and managed from Profile.
+The browser crops it to a 512-pixel JPEG; `/api/profile/avatar` (GET, PUT,
+DELETE) then accepts JPEG, PNG or WebP up to 2 MB and 4 megapixels, checks the
+file signature, decodes and re-encodes it with `sharp` to a 256-pixel JPEG
+without metadata, and stores it as `bytea` in the `user_profile` table added by
+migration `0002_profile`. The photo is therefore covered by the existing
+encrypted database backups; no volume, service, credential or DNS change is
+needed. Each user can read and change only their own photo, with the same rule as
+the rest of the app (verified email still in `AUTH_ALLOWED_EMAILS`). Responses
+are `no-store`, `nosniff` and same-origin only, writes need this site's
+`Origin`, and every change gets a new version in the image URL.
+`/update-user` accepts only that server-owned URL (or `null` after removal),
+never an arbitrary image URL. Under Clerk the endpoint returns 404. The server
+accepts request bodies up to 2 MB plus headroom for this endpoint only; every
+other path keeps the 64 KiB limit. On rollback leave `user_profile` in place.
+
+To roll back, set `AUTH_PROVIDER=clerk` and recreate only the app service with the
+same image. Keep the Clerk keys, its production instance and DNS available. Leave
+the additive auth tables in place; never restore an older database just to change
+providers, because that would discard newer recipes.
+
+Brevo's free plan adds a `List-Unsubscribe` header even to transactional emails,
+which some clients show as a mailing-list banner; it cannot be removed without
+Brevo approval.
 
 ## Database connection budget
 

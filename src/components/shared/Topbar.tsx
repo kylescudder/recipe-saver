@@ -1,10 +1,8 @@
-'use client'
-import React from 'react'
+import type { ReactNode } from 'react'
 import { Link } from '@tanstack/react-router'
-import Logout from './Logout'
 import { ModeToggle } from '../ui/dark-mode-toggle'
 
-export default function Topbar() {
+export default function Topbar({ account }: { account: ReactNode }) {
   return (
     <nav className='site-header' aria-label='Main navigation'>
       <Link to='/' className='wordmark'>
@@ -19,7 +17,7 @@ export default function Topbar() {
       </Link>
       <div className='header-actions'>
         <ModeToggle />
-        <Logout />
+        {account}
       </div>
     </nav>
   )

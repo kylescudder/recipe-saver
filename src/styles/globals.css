@@ -43,6 +43,21 @@
   --radius-lg: var(--radius);
   --radius-md: calc(var(--radius) - 2px);
   --radius-sm: calc(var(--radius) - 4px);
+  /* Better Auth UI (shadcn radix-nova) cards and the OTP caret. */
+  --radius-xl: calc(var(--radius) + 4px);
+  --animate-caret-blink: caret-blink 1.25s ease-out infinite;
+
+  @keyframes caret-blink {
+    0%,
+    70%,
+    100% {
+      opacity: 1;
+    }
+    20%,
+    50% {
+      opacity: 0;
+    }
+  }
 
   --animate-accordion-down: accordion-down 0.2s ease-out;
   --animate-accordion-up: accordion-up 0.2s ease-out;
@@ -728,6 +743,32 @@
   background: transparent;
   padding-inline: 0;
   margin-top: 12px;
+}
+/* Better Auth UI cards sit on the recipe book's page. */
+.recipe-auth-card,
+.recipe-auth-settings [data-slot='card'] {
+  background: hsl(var(--card) / 0.6);
+  box-shadow: none;
+}
+.recipe-auth-card [data-slot='card-title'],
+.recipe-auth-settings h2 {
+  font-family: 'Lora Variable', Georgia, serif;
+  font-weight: 500;
+}
+.recipe-auth-card input,
+.recipe-auth-settings input {
+  font-size: 16px;
+}
+.profile-page {
+  padding-top: 25px;
+  max-width: 560px;
+}
+.account-placeholder {
+  display: block;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: hsl(var(--muted));
 }
 .skip-link {
   position: fixed;

@@ -47,6 +47,7 @@ try {
     await sql`SELECT has_schema_privilege(current_user, 'public', 'CREATE') AS can_create`
   assert.equal(grants.can_create, false)
   await sql`SELECT id FROM recipes LIMIT 1`
+  await sql`SELECT user_id FROM user_profile LIMIT 1`
 } finally {
   await sql.end()
 }
