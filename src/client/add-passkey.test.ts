@@ -100,7 +100,10 @@ after(async () => {
 
 function browserEvent(type: string, cancelable = false): Event {
   // Happy DOM's Event implements the DOM contract with a separate TS type.
-  return new browser.Event(type, { bubbles: true, cancelable }) as unknown as Event
+  return new browser.Event(type, {
+    bubbles: true,
+    cancelable
+  }) as unknown as Event
 }
 
 test('adding a passkey with a stale session offers "Sign in again" and returns to the profile', async () => {
