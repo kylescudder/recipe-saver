@@ -12,7 +12,7 @@
     "test": "bun test server/*.test.ts tests/*.test.ts && bun test src/client",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test:e2e": "playwright test",
+    "test:e2e": "bun e2e/run.ts",
     "lint": "eslint .",
     "prepare": "husky",
     "test:connections": "bun deploy/test-connection-budget.ts",
