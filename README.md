@@ -37,18 +37,25 @@ at Herman's shared production administrator connection.
 
 ## Browser tests
 
-`bun run test:e2e` runs the Playwright journeys against a running local frontend
-and API. It covers website and cookbook saves, validation, reload persistence,
+`bun run test:e2e` runs the Playwright journeys against the production build. It
+covers website and cookbook saves, validation, reload persistence,
 search, archive, sorting, pagination, column visibility, appearance, keyboard
 focus and signed-out access at desktop and mobile widths.
 
-Sign in with a dedicated test account: an address in `AUTH_ALLOWED_EMAILS` that
-has a password set from Profile. Set
-`E2E_USERNAME` (its email) and `E2E_PASSWORD` privately in the environment, plus
-`E2E_DATABASE_URL` for the same disposable local database used by the API. Its
-database name must start with `recipe_e2e` or `recipe_redesign`. Tests delete local
-recipes to exercise empty states. They do not create accounts. `E2E_BASE_URL` defaults to `http://localhost:5174`; start the app there
-(`bun run dev --port 5174`) with `APP_ORIGIN` set to the same address.
+It needs no setup beyond Homebrew Postgres (`brew install postgresql@18`).
+`e2e/run.ts` creates a throwaway Postgres cluster on a free port, migrates it,
+seeds a throwaway verified user with a random password, builds the app and lets
+Playwright start `bun run start` against that database. The cluster and its
+directory are deleted afterwards, and the credentials never leave the process.
+No production data, account or email delivery is involved.
+
+To reuse a database you manage, set `E2E_DATABASE_URL` to a disposable local
+database whose name starts with `recipe_e2e` or `recipe_redesign`; tests delete
+local recipes to exercise empty states. `E2E_SKIP_BUILD=1` skips the build when
+`dist/` is current. Arguments are passed to Playwright
+(`bun run test:e2e --grep cookbook`). To target a server you started yourself,
+run `bunx --no-install playwright test` with `E2E_BASE_URL`, `E2E_DATABASE_URL`,
+`E2E_USERNAME` and `E2E_PASSWORD` set.
 
 Global setup validates the disposable PostgreSQL URL before launching a browser
 or signing in. The setup guard tests run as part of `bun run test`, or standalone

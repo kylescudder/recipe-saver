@@ -83,7 +83,13 @@ for (const width of [1280, 390]) {
           exact: true
         })
         .click()
+      const archived = page.waitForResponse(
+        (response) =>
+          response.url().includes('recipes.archive') &&
+          response.request().method() === 'POST'
+      )
       await page.getByRole('menuitem', { name: 'Archive recipe' }).click()
+      expect((await archived).ok()).toBe(true)
       await expect(
         page.getByRole('cell', { name: `${title} ${suffix}`, exact: true })
       ).not.toBeVisible()
