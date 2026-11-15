@@ -63,6 +63,13 @@ async function throwawayDatabase() {
     const url = new URL(external)
     if (!['localhost', '127.0.0.1'].includes(url.hostname))
       throw new Error('E2E_DATABASE_URL must be a local disposable database.')
+    if (
+      !['postgres:', 'postgresql:'].includes(url.protocol) ||
+      !/^\/recipe_(e2e|redesign)(_|$)/.test(url.pathname)
+    )
+      throw new Error(
+        'E2E_DATABASE_URL must identify a disposable recipe database.'
+      )
     return external
   }
   if (spawnSync('initdb', ['--version']).status !== 0)
