@@ -17,6 +17,7 @@ import AddRecipe from './forms/AddRecipe'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
 import { DataTable } from './ui/data-table'
+import type { DataTableFeatures } from './ui/data-table-features'
 import { DataTableColumnHeader } from './ui/data-table-header'
 import {
   DropdownMenu,
@@ -82,7 +83,9 @@ export default function RecipeList() {
     }
   }
 
-  const columns: (ColumnDef<IRecipe> & { title?: string })[] = [
+  const columns: (ColumnDef<DataTableFeatures, IRecipe> & {
+    title?: string
+  })[] = [
     {
       accessorKey: 'recipeName',
       title: 'Recipe',

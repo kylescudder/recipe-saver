@@ -1,6 +1,7 @@
 'use client'
 import { DropdownMenuTrigger } from '@radix-ui/react-dropdown-menu'
-import { type Table, type Column } from '@tanstack/react-table'
+import type { Column, ReactTable, RowData } from '@tanstack/react-table'
+import type { DataTableFeatures } from './data-table-features'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -11,15 +12,17 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { IconAdjustmentsHorizontal } from '@tabler/icons-react'
 
-interface DataTableViewOptionsProps<TData> {
-  table: Table<TData>
+interface DataTableViewOptionsProps<TData extends RowData> {
+  table: ReactTable<DataTableFeatures, TData>
 }
 
-export function DataTableViewOptions<TData>({
+export function DataTableViewOptions<TData extends RowData>({
   table
 }: DataTableViewOptionsProps<TData>) {
   // Helper function to get a user-friendly column label
-  const getColumnLabel = (column: Column<TData, unknown>): React.ReactNode => {
+  const getColumnLabel = (
+    column: Column<DataTableFeatures, TData, unknown>
+  ): React.ReactNode => {
     if (
       column.columnDef &&
       'title' in column.columnDef &&

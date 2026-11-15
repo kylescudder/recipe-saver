@@ -1,4 +1,4 @@
-import { Column } from '@tanstack/react-table'
+import type { Column, RowData } from '@tanstack/react-table'
 
 import { cn } from '@/lib/utils'
 import {
@@ -9,6 +9,7 @@ import {
   DropdownMenuTrigger
 } from './dropdown-menu'
 import { Button } from './button'
+import type { DataTableFeatures } from './data-table-features'
 import {
   IconCaretDown,
   IconCaretUp,
@@ -17,18 +18,17 @@ import {
 } from '@tabler/icons-react'
 
 interface DataTableColumnHeaderProps<
-  TData,
-  TValue
+  TData extends RowData
 > extends React.HTMLAttributes<HTMLDivElement> {
-  column: Column<TData, TValue>
+  column: Column<DataTableFeatures, TData>
   title: string
 }
 
-export function DataTableColumnHeader<TData, TValue>({
+export function DataTableColumnHeader<TData extends RowData>({
   column,
   title,
   className
-}: DataTableColumnHeaderProps<TData, TValue>) {
+}: DataTableColumnHeaderProps<TData>) {
   if (!column.getCanSort()) {
     return <div className={cn(className)}>{title}</div>
   }
