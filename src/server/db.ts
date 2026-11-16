@@ -7,7 +7,9 @@ export function database(url: string, max = 4) {
   return postgres(url, {
     max,
     idle_timeout: 20,
-    connect_timeout: 10,
+    // postgres.js v4 retries a connection refused for too many connections
+    // (53300) until connect_timeout passes, so keep it short to fail fast.
+    connect_timeout: 2,
     onnotice: () => {}
   })
 }

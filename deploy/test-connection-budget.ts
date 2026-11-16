@@ -6,7 +6,7 @@ import { createHealthCheck } from '../src/server/health'
 import { stallHealthQueries } from '../tests/postgres-proxy'
 import postgres from 'postgres'
 function connect(url: string, max: number) {
-  return adapt(postgres(url, { max, connect_timeout: 3, onnotice: () => {} }))
+  return adapt(postgres(url, { max, connect_timeout: 2, onnotice: () => {} }))
 }
 function adapt(pool: ReturnType<typeof postgres>): Client {
   return {
@@ -113,6 +113,7 @@ async function checkBudget() {
       await connection.query('SELECT 1')
     }
     let rejected = false
+    const started = performance.now()
     try {
       await overflow.query('SELECT 1')
     } catch (error) {
@@ -123,6 +124,11 @@ async function checkBudget() {
       rejected,
       true,
       'The ninth connection must hit the real role limit'
+    )
+    // postgres.js v4 retries 53300 until connect_timeout (2 s) has passed.
+    assert.ok(
+      performance.now() - started < 5000,
+      'A refused connection must fail within seconds'
     )
     healthProxy.release()
     for (const probe of await healthProbes)

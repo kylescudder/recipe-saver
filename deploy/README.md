@@ -220,12 +220,20 @@ one-connection client instead of importing the application pool. This leaves
 two slots for operator connections during a release; owner migrations use a
 separate role and explicitly limit their client to one connection. The shared
 application client and owner migration client use a 20-second idle timeout and a
-10-second connect timeout. Health retains its separate three-second deadline.
+2-second connect timeout. Health retains its separate three-second deadline.
+
+postgres.js v4 retries a connection that PostgreSQL refuses for too many
+connections (`53300`) with backoff until `connect_timeout` has passed, where v3
+rejected at once. Every client the app, deployment checks and tests create sets
+`connect_timeout: 2`, so a refused connection fails in about three seconds
+instead of leaving requests waiting during a connection-limit spike.
 
 CI exercises the real application, deployment and health clients against an
 eight-connection test role, with all four application slots held open. Concurrent
 deployment queries must share one backend, overlapping health probes must share
 one separate connection, two spare slots must remain usable, and a ninth
-connection must be rejected by PostgreSQL. Integration tests also check idle
+connection must be rejected by PostgreSQL within five seconds. Integration tests
+also check that a client refused by a role connection limit rejects with `53300`
+within five seconds, idle
 connection retirement and reconnection, serialized owner queries, repeatable
 migrations and the migration command's clean exit.
