@@ -68,7 +68,7 @@ async function checkBudget() {
     const appSql = database(url.toString())
     const app = adapt(appSql)
     const deployment = adapt(createDeploymentDatabase(url.toString()))
-    const spare = connect(url.toString(), 2)
+    const spare = connect(url.toString(), 3)
     const overflow = connect(url.toString(), 1)
     pools.push(app, deployment, spare, overflow)
     assert.equal(appSql.options.max, 4)
@@ -112,6 +112,19 @@ async function checkBudget() {
       held.push(connection)
       await connection.query('SELECT 1')
     }
+    healthProxy.release()
+    for (const probe of await healthProbes)
+      assert.equal(probe.status, 'fulfilled')
+    // postgres.js v4 retries a refused connection for up to connect_timeout, which
+    // can outlast the health probe's deadline and free its slot. Hold that slot
+    // with a reservation so all eight stay taken while the ninth is refused.
+    const replacement = await spare.reserve()
+    held.push(replacement)
+    await replacement.query('SELECT 1')
+    const [full] = await admin.query(
+      `SELECT count(*)::int AS total FROM pg_stat_activity WHERE usename = '${role}'`
+    )
+    assert.equal(full!.total, 8)
     let rejected = false
     const started = performance.now()
     try {
@@ -130,9 +143,6 @@ async function checkBudget() {
       performance.now() - started < 5000,
       'A refused connection must fail within seconds'
     )
-    healthProxy.release()
-    for (const probe of await healthProbes)
-      assert.equal(probe.status, 'fulfilled')
   } finally {
     healthProxy?.release()
     await healthProbes
