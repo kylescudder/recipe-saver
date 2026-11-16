@@ -15,6 +15,7 @@ if (!process.env.TEST_DATABASE_URL)
   )
 const admin = postgres(process.env.TEST_DATABASE_URL, {
   max: 1,
+  connect_timeout: 2,
   onnotice: () => {}
 })
 const name = 'recipe_ci_' + randomUUID().replaceAll('-', '').slice(0, 10)
@@ -87,7 +88,7 @@ test('runtime connections use bounded timeouts and reconnect after idle retireme
   expect(sql.options).toMatchObject({
     max: 4,
     idle_timeout: 20,
-    connect_timeout: 10
+    connect_timeout: 2
   })
   const [first] = await sql`SELECT pg_backend_pid() AS pid`
   expect((await sql`SELECT pg_backend_pid() AS pid`)[0].pid).toBe(first.pid)
@@ -95,6 +96,35 @@ test('runtime connections use bounded timeouts and reconnect after idle retireme
   const [next] = await sql`SELECT pg_backend_pid() AS pid`
   expect(next.pid).not.toBe(first.pid)
 }, 25_000)
+test('a connection refused by the role connection limit fails within seconds', async () => {
+  // postgres.js v4 retries 53300 until connect_timeout; the app client must not hang.
+  const limited = name + '_limited'
+  await admin.unsafe(
+    `CREATE ROLE "${limited}" LOGIN NOSUPERUSER NOINHERIT CONNECTION LIMIT 1`
+  )
+  const holder = database(databaseUrl(limited), 1)
+  const refused = database(databaseUrl(limited), 1)
+  try {
+    await admin.unsafe(`GRANT CONNECT ON DATABASE "${name}" TO "${limited}"`)
+    const held = await holder.reserve()
+    try {
+      await held`SELECT 1`
+      const started = performance.now()
+      const error = await refused`SELECT 1`.then(
+        () => undefined,
+        (reason: unknown) => reason
+      )
+      expect(error).toMatchObject({ code: '53300' })
+      expect(performance.now() - started).toBeLessThan(5000)
+    } finally {
+      held.release()
+    }
+  } finally {
+    await Promise.all([holder, refused].map((sql) => sql.end({ timeout: 1 })))
+    await admin.unsafe(`REVOKE CONNECT ON DATABASE "${name}" FROM "${limited}"`)
+    await admin.unsafe(`DROP ROLE "${limited}"`)
+  }
+}, 10_000)
 test('all recipe procedures reject unauthenticated access', async () => {
   const anonymous = caller(null)
   for (const operation of [

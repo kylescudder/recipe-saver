@@ -20,5 +20,5 @@ export function validateTestDatabaseUrl() {
 }
 
 export function testDatabase() {
-  return postgres(validateTestDatabaseUrl(), { max: 1 })
+  return postgres(validateTestDatabaseUrl(), { max: 1, connect_timeout: 2 })
 }
